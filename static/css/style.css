@@ -1,0 +1,32 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+header {
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+}
+
+nav {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+nav a {
+    margin-right: 16px;
+    text-decoration: none;
+    color: black;
+}
+
+main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
