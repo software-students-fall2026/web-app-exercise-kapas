@@ -1,4 +1,4 @@
-"""Profile pages: public to view, has owner-only controls (eg editing)."""
+"""Profile is public to view, has owner-only controls (eg editing)."""
 
 from typing import Any, Optional
 
@@ -28,18 +28,14 @@ def get_user_by_username(username: str) -> Optional[dict[str, Any]]:
 
 
 def get_user_by_id(user_id: str) -> Optional[dict[str, Any]]:
-    """Look up a user by the string form of their ``_id``."""
+    """Look up a user by the string form of their _id."""
     if not ObjectId.is_valid(user_id):
         return None
     return db.users.find_one({"_id": ObjectId(user_id)})
 
 
 def get_profile_data(user: dict[str, Any]) -> dict[str, Any]:
-    """Build the profile dict the template needs for ``user``.
-
-    Listened albums are ranked by rating (highest first, unrated last);
-    want-to-listen albums are newest first. The average only counts rated
-    albums and is None when there are none.
+    """Build the profile dict the template needs for user.
     """
     albums = list(
         db.albums.find({"user_id": user["_id"]}).sort("created_at", -1)
@@ -63,10 +59,7 @@ def get_profile_data(user: dict[str, Any]) -> dict[str, Any]:
 
 
 def _current_user_id() -> Optional[str]:
-    """Return the logged-in user's id, or None if nobody is logged in.
-
-    Flask-Login's ``current_user`` raises when no ``LoginManager`` has been
-    set up on the app, so treat that case as anonymous.
+    """Return the logged-in user's id, or None if nobody is logged in with Flask-Login.
     """
     if getattr(current_app, "login_manager", None) is None:
         return None
@@ -92,7 +85,7 @@ def my_profile() -> Response:
 
 @profiles_bp.get("/u/<username>")
 def view_profile(username: str) -> str:
-    """Show a user's profile. Anyone can view; only the owner gets controls."""
+    """Show a user's profile."""
     user = get_user_by_username(username)
     if user is None:
         abort(404)
