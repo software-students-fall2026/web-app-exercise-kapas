@@ -8,6 +8,8 @@ from models import User
 
 load_dotenv()
 
+from profiles import profiles_bp
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
@@ -26,6 +28,8 @@ def load_user(user_id):
 
 # Register blueprints
 app.register_blueprint(auth_bp)
+app.register_blueprint(profiles_bp)
+
 
 @app.route("/")
 def home():
