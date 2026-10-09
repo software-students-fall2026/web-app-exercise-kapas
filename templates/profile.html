@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ profile.username }} - Album Tracker
+{% endblock %}
+
+{% macro album_list(albums, show_rating) %}
+<ul class="album-list">
+    {% for album in albums %}
+    <li class="album">
+        <strong>{{ album.title }}</strong> by {{ album.artist }}
+        {% if album.year %}({{ album.year }}){% endif %}
+        {% if show_rating and album.rating %}
+        <span class="rating">{{ album.rating }}/5</span>
+        {% endif %}
+        {% if album.review %}
+        <p class="review">{{ album.review }}</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+
+<h1>{{ profile.username }}</h1>
+
+{% if profile.album_count == 0 %}
+<p class="empty">
+    {% if is_owner %}
+    You haven't added any albums yet.
+    {% else %}
+    {{ profile.username }} hasn't added any albums yet.
+    {% endif %}
+</p>
+{% else %}
+<p class="summary">
+    {{ profile.album_count }} album{{ "" if profile.album_count == 1 else "s" }}
+    {% if profile.average_rating is not none %}
+    &middot; average rating {{ profile.average_rating }}/5
+    {% endif %}
+</p>
+
+<h2>Listened</h2>
+{% if profile.listened %}
+{{ album_list(profile.listened, true) }}
+{% else %}
+<p class="empty">No listened albums yet.</p>
+{% endif %}
+
+<h2>Want to listen</h2>
+{% if profile.want_to_listen %}
+{{ album_list(profile.want_to_listen, false) }}
+{% else %}
+<p class="empty">Nothing on the list yet.</p>
+{% endif %}
+{% endif %}
+
+{% endblock %}
