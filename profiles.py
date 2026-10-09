@@ -14,7 +14,7 @@ from flask import (
 )
 from flask_login import current_user
 
-from db import db
+from db import get_db
 
 STATUS_LISTENED = "listened"
 STATUS_WANT_TO_LISTEN = "want_to_listen"
@@ -23,22 +23,22 @@ profiles_bp = Blueprint("profiles", __name__)
 
 
 def get_user_by_username(username: str) -> Optional[dict[str, Any]]:
-    """Look up a user by username, case-insensitively."""
-    return db.users.find_one({"username": username.strip().lower()})
+    """Look up a user by exact username, as the login code does."""
+    return get_db().users.find_one({"username": username.strip()})
 
 
 def get_user_by_id(user_id: str) -> Optional[dict[str, Any]]:
     """Look up a user by the string form of their _id."""
     if not ObjectId.is_valid(user_id):
         return None
-    return db.users.find_one({"_id": ObjectId(user_id)})
+    return get_db().users.find_one({"_id": ObjectId(user_id)})
 
 
 def get_profile_data(user: dict[str, Any]) -> dict[str, Any]:
     """Build the profile dict the template needs for user.
     """
     albums = list(
-        db.albums.find({"user_id": user["_id"]}).sort("created_at", -1)
+        get_db().albums.find({"user_id": user["_id"]}).sort("created_at", -1)
     )
     listened = [a for a in albums if a.get("status") == STATUS_LISTENED]
     want_to_listen = [

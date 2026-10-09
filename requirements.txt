@@ -1,5 +1,4 @@
 Flask
-Flask-Login
 pymongo
 python-dotenv
 flask-login
