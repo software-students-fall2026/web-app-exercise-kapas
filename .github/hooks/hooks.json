@@ -3,7 +3,9 @@
     "PostToolUse": [
       {
         "type": "command",
-        "command": "python3 .automations/give-student-credit.py --event=vscode || python .automations/give-student-credit.py --event=vscode"
+        "command": "python3 .automations/give-student-credit.py --event=vscode || python .automations/give-student-credit.py --event=vscode",
+        "windows": "python .automations/give-student-credit.py --event=vscode",
+        "timeout": 15
       }
     ]
   }

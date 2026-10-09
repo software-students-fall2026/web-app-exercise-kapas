@@ -1,12 +1,43 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.automations/give-student-credit.py\" --event=claude || python \"$CLAUDE_PROJECT_DIR/.automations/give-student-credit.py\" --event=claude"
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=before || python \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=before"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude || python \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=after || python \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=after"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=after || python \"${CLAUDE_PROJECT_DIR}/.automations/give-student-credit.py\" --event=claude-terminal --terminal=after"
           }
         ]
       }

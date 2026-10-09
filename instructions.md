@@ -96,6 +96,15 @@ Team members are required to work from a single GitHub shared repository.
 
 To create it, exactly one member of the team - decide among yourselves who - clicks the `Fork` button on this repository to make a copy of it in their own GitHub account. That member then gives the rest of the team access to it: in the new repository's `Settings` tab, under `Collaborators and teams`, add each teammate and the course admins by their GitHub usernames. Everyone else clones that one shared repository.
 
+After cloning the team repository, every team member must run the setup script once from the repository's main directory, and again in any new clone:
+
+```bash
+python3 .automations/setup.py   # Mac/Linux
+python .automations/setup.py    # Windows
+```
+
+Fix any problems it reports, then approve the hooks in each AI coding tool you have in this environment, as the script describes.
+
 - all team members are expected to contribute to the main code of the project.
 - each team member must be able to push and pull to and from the shared repository.
 - each member's code and workflow contributions will be tracked, so team members must use their own accounts when making code changes.

@@ -1,30 +1,62 @@
 #!/bin/bash
 
-# To activate this commit-msg hook, run the following commands from the main repository directory command shell:
-#   chmod a+x .githooks/commit-msg # make executable
-#   git config core.hooksPath ".githooks" # enable hook
+# To activate this commit-msg hook, run the setup script from the main repository directory:
+#   python3 .automations/setup.py   (Mac/Linux)
+#   python .automations/setup.py    (Windows)
 
 # Public: Current API version in format "x.y.z".
-export API_VERSION="1.0.0"
+export API_VERSION="1.1.0"
 
 #
 # Public: git commit-msg hook to reject multi-line commit messages.
 #
-# Checks whether git commit message is a single line or multiline and rejects multi-line commits.
-# git stores commit messages in a temporary file, .git/COMMIT_EDITMSG
+# Commit messages must be a single line, optionally followed by git trailers such as
+#   Co-Authored-By: Name <email>
+# which AI coding tools add to credit themselves.
 #
-# Exits with error code 1 if multi-line commit message found
+# Exits with error code 1 if any other multi-line commit message is found
+#
+# git passes the path of the file holding the commit message as the first argument
+
+message_file="$1"
+repository_root=$(git rev-parse --show-toplevel)
+git_dir=$(git rev-parse --absolute-git-dir)
 
 reject_multiline_commit_messages() {
-    # Read the commit message temporary file
-    commit_message=$(cat .git/COMMIT_EDITMSG)
+    # Everything after the first line, ignoring blank lines and git's comment lines
+    extra_lines=$(tail -n +2 "$message_file" | grep -v '^[[:space:]]*$' | grep -v '^#')
 
-    # Check if the commit message contains one or more line breaks
-    if [[ "$commit_message" == *$'\n'* ]]; then
-        echo "Multi-line commit messages are forbidden!  Try committing again."
+    # Any extra line that isn't a "Key: value" trailer is forbidden
+    if [ -n "$extra_lines" ] && echo "$extra_lines" | grep -qvE '^[A-Za-z][A-Za-z0-9-]*: .+'; then
+        echo "Multi-line commit messages are forbidden!  Write one line, optionally followed by trailers such as 'Co-Authored-By: Name <email>'.  Try committing again."
         exit 1
     fi
 }
 
-reject_multiline_commit_messages # Exit with error if multi-line message found
+run_python() {
+    # Mac/Linux usually have python3; Windows usually has python
+    if python3 -c "" >/dev/null 2>&1; then
+        python3 "$@"
+    else
+        python "$@"
+    fi
+}
+
+run_setup_once() {
+    # The first commit after the hook is activated runs the setup script, in case it was never run
+    if [ ! -f "$git_dir/ai-tracking/setup-done" ]; then
+        run_python "$repository_root/.automations/setup.py" --from-commit-hook </dev/null
+    fi
+}
+
+report_ai_coauthors() {
+    # Report commits that credit an AI tool as a co-author; never hold up the commit while doing so
+    if grep -qiE '^(co-authored-by|assisted-by|generated-by|ai-assisted):.*(claude|anthropic|copilot|codex|openai|chatgpt|cursor|gemini)' "$message_file"; then
+        (run_python "$repository_root/.automations/give-student-credit.py" --event=ai-commit </dev/null >/dev/null 2>&1 &)
+    fi
+}
+
+reject_multiline_commit_messages # Exit with error if a multi-line message is found
+run_setup_once
+report_ai_coauthors
 exit 0 # Proceed with commit otherwise

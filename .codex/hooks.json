@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|shell|exec_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=before || python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=before",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=before",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex || python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell|shell|exec_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=after || python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=after",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)/.automations/give-student-credit.py\" --event=codex-terminal --terminal=after",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
