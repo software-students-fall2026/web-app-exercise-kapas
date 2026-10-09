@@ -4,11 +4,11 @@ A little exercise to build a web application following an agile development proc
 
 ## Product vision statement
 
-See instructions. Delete this line and place the Product Vision Statement here.
+A music-tracking platform that helps music fans organize their listening history, rate and review albums, build a wishlist of albums to hear, and discover new music.
 
 ## User stories
 
-See instructions. Delete this line and place a link to the user stories here.
+https://github.com/orgs/software-students-fall2026/projects/1
 
 ## Steps necessary to run the software
 
