@@ -7,9 +7,9 @@
 {% endblock %}
 
 {% block content %}
-<section class="login-container">
+<section class="register-container">
   <h1>Create an Account</h1>
-  <p class="login-subtitle">Sign up for Album Tracker.</p>
+  <p class="register-subtitle">Sign up for Album Tracker.</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
@@ -40,7 +40,7 @@
       <input type="password" id="confirm_password" name="confirm_password" required>
     </div>
 
-    <button type="submit" class="login-button">Sign Up</button>
+    <button type="submit" class="register-button">Sign Up</button>
   </form>
 
   <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log In</a></p>

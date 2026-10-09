@@ -42,12 +42,15 @@ def logout():
     flash('You have been logged out', 'success')
     return redirect(url_for('home'))
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """
     Handle user registration (API endpoint only, no template)
     Expects JSON: {"username": "...", "email": "...", "password": "..."}
     """
+    if request.method == 'GET':
+        return render_template('register.html')
+
     data = request.get_json()
 
     if not data:
