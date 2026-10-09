@@ -1,1 +1,0 @@
-console.log("Album Tracker loaded");
