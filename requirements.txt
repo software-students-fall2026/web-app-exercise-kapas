@@ -1,3 +1,6 @@
 Flask
 pymongo
 python-dotenv
+flask-login
+flask-wtf
+bcrypt
