@@ -25,10 +25,7 @@ def login():
             login_user(user)
             flash('Login successful!', 'success')
             next_page = request.args.get('next')
-            # only allow redirects to paths on this site
-            if not next_page or not next_page.startswith('/') or next_page.startswith('//'):
-                next_page = url_for('home')
-            return redirect(next_page)
+            return redirect(next_page if next_page else url_for('home'))
         else:
             flash('Invalid username or password', 'error')
             return render_template('login.html')
