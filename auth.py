@@ -45,44 +45,41 @@ def logout():
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """
-    Handle user registration (API endpoint only, no template)
-    Expects JSON: {"username": "...", "email": "...", "password": "..."}
+    Handle user registration
+    GET: Display registration page
+    POST: Process registration form
     """
     if request.method == 'GET':
         return render_template('register.html')
 
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip()
+    password = request.form.get('password', '')
+    confirm_password = request.form.get('confirm_password', '')
 
     if not username or not email or not password:
-        return jsonify({"error": "Missing required fields: username, email, password"}), 400
+        flash('Please fill in all fields', 'error')
+        return render_template('register.html')
 
-    # Check if user already exists
+    if password != confirm_password:
+        flash('Passwords do not match', 'error')
+        return render_template('register.html')
+
     if User.find_by_username(username):
-        return jsonify({"error": "Username already exists"}), 400
+        flash('Username already exists', 'error')
+        return render_template('register.html')
 
     if User.find_by_email(email):
-        return jsonify({"error": "Email already exists"}), 400
+        flash('Email already exists', 'error')
+        return render_template('register.html')
 
-    # Create new user
     user = User(username=username, email=email)
     user.set_password(password)
     user.save()
 
-    return jsonify({
-        "message": "User created successfully",
-        "user": {
-            "id": str(user._id),
-            "username": user.username,
-            "email": user.email
-        }
-    }), 201
+    login_user(user)
+    flash('Account created!', 'success')
+    return redirect(url_for('home'))
 
 @auth_bp.route('/api/auth/me', methods=['GET'])
 @login_required

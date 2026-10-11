@@ -4,6 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 import os
 from auth import auth_bp
+from db import ensure_indexes
 from models import User
 
 load_dotenv()
@@ -25,6 +26,12 @@ login_manager.login_view = 'auth.login'
 def load_user(user_id):
     """Load user by ID for flask-login"""
     return User.find_by_id(user_id)
+
+
+try: # creates the indexes so uniqueness can be checked
+    ensure_indexes()
+except Exception as e: # could not create indexes
+    print(f"Error: could not create database indexes: {e}")
 
 # Register blueprints
 app.register_blueprint(auth_bp)
