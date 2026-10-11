@@ -12,7 +12,22 @@ https://github.com/orgs/software-students-fall2026/projects/1
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+1. Clone the repository.
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Create a `.env` using `env.example`
+
+4. Run the app: 
+
+```bash
+python3 app.py
+```
+
 
 ## Task boards
 
