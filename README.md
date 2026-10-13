@@ -12,9 +12,22 @@ A music-tracking platform that helps music fans organize their listening history
 
 ## Steps necessary to run the software
 
-1. Get MongoDB credentials and create `.env` file (see `env.example`)
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run: `python3 app/app.py`
+1. Clone the repository.
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Create a `.env` using `env.example`
+
+4. Run the app: 
+
+```bash
+python3 app.py
+```
+
 
 ## Task boards
 
