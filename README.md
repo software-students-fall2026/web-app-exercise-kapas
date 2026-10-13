@@ -8,12 +8,14 @@ A music-tracking platform that helps music fans organize their listening history
 
 ## User stories
 
-https://github.com/orgs/software-students-fall2026/projects/1
+[View project issues and user stories](https://github.com/software-students-fall2026/web-app-exercise-kapas/issues)
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+1. Get MongoDB credentials and create `.env` file (see `env.example`)
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run: `python3 app/app.py`
 
 ## Task boards
 
-See instructions. Delete this line and place a link to the task boards here.
+[Sprint 1](https://github.com/orgs/software-students-fall2026/projects/1)
