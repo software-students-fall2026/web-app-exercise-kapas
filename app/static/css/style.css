@@ -30,3 +30,40 @@ main {
     margin: 0 auto;
     padding: 24px 16px;
 }
+
+/* Album List */
+.album-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.album-list .album {
+    padding: 16px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.album-list .album a {
+    color: #111;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.album-list .album a:hover {
+    text-decoration: underline;
+}
+
+.album-list .rating {
+    color: #666;
+    font-size: 14px;
+}
+
+.album-list .review {
+    margin-top: 8px;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+}
