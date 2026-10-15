@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ album.title }} by {{ album.artist }} - Album Tracker
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/album.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Album Header Section -->
+<div class="album-header">
+  <h1>{{ album.title }}</h1>
+  <p class="album-artist">by {{ album.artist }}</p>
+  {% if album.year %}
+  <p class="album-year">{{ album.year }}</p>
+  {% endif %}
+  <p class="album-meta">
+    Added by <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">{{ owner.username }}</a>
+    &middot; {{ created_date }}
+  </p>
+</div>
+
+<!-- Status Badge -->
+<div class="album-status">
+  {% if album.status == 'listened' %}
+  <span class="status-badge listened">Listened</span>
+  {% else %}
+  <span class="status-badge want-to-listen">Want to Listen</span>
+  {% endif %}
+</div>
+
+<!-- Rating Display (if exists and status is listened) -->
+{% if album.status == 'listened' and album.rating %}
+<div class="album-rating">
+  <strong>Rating:</strong> {{ album.rating }}/5
+</div>
+{% endif %}
+
+<!-- Review Display (if exists) -->
+{% if album.review %}
+<div class="album-review">
+  <h2>Review</h2>
+  <p>{{ album.review }}</p>
+</div>
+{% endif %}
+
+<!-- Edit Form (owner only) -->
+{% if is_owner %}
+<div class="album-edit-form">
+  <h2>{% if album.rating or album.review %}Edit{% else %}Add{% endif %} Rating & Review</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+      <label for="status">Status</label>
+      <select id="status" name="status" required>
+        <option value="want_to_listen" {% if album.status == 'want_to_listen' %}selected{% endif %}>
+          Want to Listen
+        </option>
+        <option value="listened" {% if album.status == 'listened' %}selected{% endif %}>
+          Listened
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="rating">Rating (1-5)</label>
+      <input
+        type="number"
+        id="rating"
+        name="rating"
+        min="1"
+        max="5"
+        step="0.5"
+        value="{{ album.rating if album.rating else '' }}"
+        placeholder="Optional"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="review">Review</label>
+      <textarea
+        id="review"
+        name="review"
+        rows="6"
+        placeholder="Share your thoughts about this album..."
+      >{{ album.review if album.review else '' }}</textarea>
+    </div>
+
+    <button type="submit" class="submit-button">Save Changes</button>
+  </form>
+</div>
+{% endif %}
+
+{% endblock %}

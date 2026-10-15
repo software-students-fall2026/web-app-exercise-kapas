@@ -1,0 +1,176 @@
+/* Album Header */
+.album-header {
+  margin-bottom: 24px;
+}
+
+.album-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.album-artist {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.album-year {
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.album-meta {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.album-meta a {
+  color: #111;
+  text-decoration: none;
+}
+
+.album-meta a:hover {
+  text-decoration: underline;
+}
+
+/* Status Badge */
+.album-status {
+  margin-bottom: 24px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-badge.listened {
+  background: #e8f5e9;
+  color: #1e5a22;
+}
+
+.status-badge.want-to-listen {
+  background: #fff3e0;
+  color: #8a4b00;
+}
+
+/* Rating Display */
+.album-rating {
+  padding: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+/* Review Display */
+.album-review {
+  padding: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.album-review h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.album-review p {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Edit Form */
+.album-edit-form {
+  padding: 24px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.album-edit-form h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 18px;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: 2px solid #333;
+  outline-offset: 2px;
+}
+
+/* Submit Button */
+.submit-button {
+  width: 100%;
+  padding: 14px;
+  background: #111;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.submit-button:hover {
+  background: #333;
+}
+
+.submit-button:focus-visible {
+  outline: 2px solid #333;
+  outline-offset: 2px;
+}
+
+/* Flash Messages */
+.flash {
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+
+.flash.error {
+  background: #fdecea;
+  border-color: #f5c2c0;
+  color: #8a1f17;
+}
+
+.flash.success {
+  background: #e8f5e9;
+  border-color: #b7dfb9;
+  color: #1e5a22;
+}
