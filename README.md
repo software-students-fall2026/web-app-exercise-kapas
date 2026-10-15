@@ -17,17 +17,23 @@ A music-tracking platform that helps music fans organize their listening history
 2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pipenv install
 ```
 
 3. Create a `.env` using `env.example`
 
-4. Run the app: 
+4. Run the app:
 
 ```bash
-python3 app.py
+pipenv run python3 app/app.py
 ```
 
+Alternatively, you can activate the virtual environment and run the app directly:
+
+```bash
+pipenv shell
+python3 app/app.py
+```
 
 ## Task boards
 
