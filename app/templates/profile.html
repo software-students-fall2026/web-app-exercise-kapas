@@ -4,11 +4,18 @@
 {{ profile.username }} - Album Tracker
 {% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+
 {% macro album_list(albums, show_rating) %}
 <ul class="album-list">
     {% for album in albums %}
     <li class="album">
-        <strong>{{ album.title }}</strong> by {{ album.artist }}
+        <a href="{{ url_for('albums.view_album', album_id=album._id) }}">
+            <strong>{{ album.title }}</strong>
+        </a> by {{ album.artist }}
         {% if album.year %}({{ album.year }}){% endif %}
         {% if show_rating and album.rating %}
         <span class="rating">{{ album.rating }}/5</span>
@@ -23,7 +30,17 @@
 
 {% block content %}
 
-<h1>{{ profile.username }}</h1>
+<section class="profile-header">
+    <div class="profile-avatar">
+        {{ profile.username[0] | upper }}
+    </div>
+
+    <div>
+        <h1>{{ profile.username }}</h1>
+        <p class="profile-subtitle">Album collection</p>
+    </div>
+</section>
+
 
 {% if profile.album_count == 0 %}
 <p class="empty">
@@ -34,26 +51,30 @@
     {% endif %}
 </p>
 {% else %}
-<p class="summary">
+<p class="summary profile-summary"></p>
     {{ profile.album_count }} album{{ "" if profile.album_count == 1 else "s" }}
     {% if profile.average_rating is not none %}
     &middot; average rating {{ profile.average_rating }}/5
     {% endif %}
 </p>
 
-<h2>Listened</h2>
-{% if profile.listened %}
-{{ album_list(profile.listened, true) }}
-{% else %}
-<p class="empty">No listened albums yet.</p>
-{% endif %}
+<section class="profile-section">
+    <h2>Listened</h2>
+    {% if profile.listened %}
+    {{ album_list(profile.listened, true) }}
+    {% else %}
+    <p class="empty">No listened albums yet.</p>
+    {% endif %}
+</section>
 
-<h2>Want to listen</h2>
-{% if profile.want_to_listen %}
-{{ album_list(profile.want_to_listen, false) }}
-{% else %}
-<p class="empty">Nothing on the list yet.</p>
-{% endif %}
+<section class="profile-section">
+    <h2>Want to listen</h2>
+    {% if profile.want_to_listen %}
+    {{ album_list(profile.want_to_listen, false) }}
+    {% else %}
+    <p class="empty">Nothing on the list yet.</p>
+    {% endif %}
+</section>
 {% endif %}
 
 {% endblock %}
