@@ -1,5 +1,6 @@
 """Album detail view - public to view, owner-only controls for editing."""
 
+import math
 from datetime import datetime
 from typing import Any, Optional
 
@@ -38,6 +39,22 @@ def get_album_by_id(album_id: str) -> Optional[dict[str, Any]]:
     if not ObjectId.is_valid(album_id):
         return None
     return get_db().albums.find_one({"_id": ObjectId(album_id)})
+
+
+def parse_rating(rating_str: str) -> Optional[float]:
+    """Parse a rating from form input.
+
+    Returns None for blank input. Raises ValueError if the value is not a
+    finite number from 1 to 5 in steps of 0.5.
+    """
+    if not rating_str:
+        return None
+    rating = float(rating_str)
+    if not math.isfinite(rating) or not 1.0 <= rating <= 5.0:
+        raise ValueError("rating out of range")
+    if rating * 2 != int(rating * 2):
+        raise ValueError("rating not a multiple of 0.5")
+    return rating
 
 
 def format_created_date(created_at: datetime) -> str:
@@ -81,16 +98,15 @@ def view_album(album_id: str):
             return redirect(url_for("albums.view_album", album_id=album_id))
 
         # Validate and parse rating
-        rating = None
-        if rating_str:
-            try:
-                rating = float(rating_str)
-                if rating < 1.0 or rating > 5.0:
-                    flash("Rating must be between 1 and 5", "error")
-                    return redirect(url_for("albums.view_album", album_id=album_id))
-            except ValueError:
-                flash("Invalid rating", "error")
-                return redirect(url_for("albums.view_album", album_id=album_id))
+        try:
+            rating = parse_rating(rating_str)
+        except ValueError:
+            flash("Rating must be a number from 1 to 5 in steps of 0.5", "error")
+            return redirect(url_for("albums.view_album", album_id=album_id))
+
+        # Only listened albums carry a rating
+        if status == STATUS_WANT_TO_LISTEN:
+            rating = None
 
         # Update album
         get_db().albums.update_one(
