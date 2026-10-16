@@ -51,7 +51,7 @@
     {% endif %}
 </p>
 {% else %}
-<p class="summary profile-summary"></p>
+<p class="summary profile-summary">
     {{ profile.album_count }} album{{ "" if profile.album_count == 1 else "s" }}
     {% if profile.average_rating is not none %}
     &middot; average rating {{ profile.average_rating }}/5
