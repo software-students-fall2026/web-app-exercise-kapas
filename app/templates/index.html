@@ -6,10 +6,31 @@ Home - Album Tracker
 
 {% block content %}
 
-<h1>Album Tracker</h1>
+<section class="home">
+    <h1>Track your music.</h1>
+    <p>
+        Keep track of albums you've listened to,
+        rate your favorites, and save what you
+        want to hear next.
+    </p>
 
-<p>
-    Track albums you've listened to and albums you want to listen to.
-</p>
+    <div class="home-actions">
+        <a href="/add-album" class="primary-button">
+            + Add Album
+        </a>
+        <a href="/search" class="secondary-button">
+            Browse Albums
+        </a>
+    </div>
+
+    <section class="home-collection">
+        <h2>Your Collection</h2>
+        <p>Your listening history and wishlist,
+           all in one place.</p>
+        <a href="{{ url_for('profiles.my_profile') }}">
+            View Your Profile →
+        </a>
+    </section>
+</section>
 
 {% endblock %}

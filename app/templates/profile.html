@@ -39,6 +39,14 @@
         <h1>{{ profile.username }}</h1>
         <p class="profile-subtitle">Album collection</p>
     </div>
+
+    {% if is_owner %}
+    <div class="profile-actions">
+        <a href="/add-album" class="add-album-link">
+            + Add Album
+        </a>
+    </div>
+    {% endif %}
 </section>
 
 
