@@ -1,7 +1,7 @@
 """Album detail view - public to view, owner-only controls for editing."""
 
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from bson import ObjectId
@@ -15,7 +15,7 @@ from flask import (
     request,
     url_for,
 )
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from db import get_db
 
@@ -59,7 +59,7 @@ def parse_rating(rating_str: str) -> Optional[float]:
 
 def format_created_date(created_at: datetime) -> str:
     """Format created_at timestamp for display."""
-    now = datetime.now()
+    now = datetime.now(created_at.tzinfo)
     diff = now - created_at
 
     if diff.days == 0:
@@ -70,6 +70,63 @@ def format_created_date(created_at: datetime) -> str:
         return f"{diff.days} days ago"
     else:
         return created_at.strftime("%B %d, %Y")
+
+
+@albums_bp.route("/a/add", methods=["GET", "POST"])
+@login_required
+def add_album():
+    """Display the add-album form and save albums for the logged-in user."""
+    if request.method == "GET":
+        return render_template("add_album.html")
+
+    title = request.form.get("title", "").strip()
+    artist = request.form.get("artist", "").strip()
+    year_str = request.form.get("year", "").strip()
+    status = request.form.get("status", "").strip()
+    rating_str = request.form.get("rating", "").strip()
+    review = request.form.get("review", "").strip()
+
+    if not title or not artist:
+        flash("Title and artist are required", "error")
+        return render_template("add_album.html")
+
+    year = None
+    if year_str:
+        try:
+            year = int(year_str)
+        except ValueError:
+            flash("Year must be a number from 1900 to 9999", "error")
+            return render_template("add_album.html")
+        if not 1900 <= year <= 9999:
+            flash("Year must be a number from 1900 to 9999", "error")
+            return render_template("add_album.html")
+
+    if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
+        flash("Invalid status", "error")
+        return render_template("add_album.html")
+
+    try:
+        rating = parse_rating(rating_str)
+    except ValueError:
+        flash("Rating must be a number from 1 to 5 in steps of 0.5", "error")
+        return render_template("add_album.html")
+
+    if status == STATUS_WANT_TO_LISTEN:
+        rating = None
+
+    result = get_db().albums.insert_one(
+        {
+            "title": title,
+            "artist": artist,
+            "year": year,
+            "status": status,
+            "rating": rating,
+            "review": review or None,
+            "user_id": current_user._id,
+            "created_at": datetime.now(timezone.utc),
+        }
+    )
+    return redirect(url_for("albums.view_album", album_id=str(result.inserted_id)))
 
 
 @albums_bp.route("/a/<album_id>", methods=["GET", "POST"])
