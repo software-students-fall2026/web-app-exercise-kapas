@@ -25,7 +25,9 @@ def login():
             login_user(user)
             flash('Login successful!', 'success')
             next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('home'))
+            if is_safe_redirect_target(next_page):
+                return redirect(next_page)
+            return redirect(url_for('home'))
         else:
             flash('Invalid username or password', 'error')
             return render_template('login.html')
