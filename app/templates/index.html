@@ -15,10 +15,10 @@ Home - Album Tracker
     </p>
 
     <div class="home-actions">
-        <a href="/add-album" class="primary-button">
+        <a href="{{ url_for('albums.add_album') }}" class="primary-button">
             + Add Album
         </a>
-        <a href="/search" class="secondary-button">
+        <a href="{{ url_for('albums.search_albums') }}" class="secondary-button">
             Browse Albums
         </a>
     </div>
@@ -27,7 +27,7 @@ Home - Album Tracker
         <h2>Your Collection</h2>
         <p>Your listening history and wishlist,
            all in one place.</p>
-        <a href="{{ url_for('profiles.my_profile') }}">
+        <a href="{{ url_for('profiles.my_profile') }}" class="secondary-button">
             View Your Profile →
         </a>
     </section>
