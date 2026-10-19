@@ -38,6 +38,14 @@
     </header>
 
     <main>
+        {% block flashes %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% endblock %}
+
         {% block content %}
         {% endblock %}
     </main>
