@@ -1,81 +1,48 @@
-
 {% extends "base.html" %}
 
 {% block title %}Edit {{ album.title }} - Album Tracker{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/album.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_album.css') }}">
 {% endblock %}
 
 {% block content %}
-<section class="album-header">
-    <h1>Edit album</h1>
-    <p class="album-artist">
-        {{ album.title }} by {{ album.artist }}
-    </p>
-</section>
+<section class="add-album-container">
+  <h1>Edit Album Details</h1>
+  <p class="add-album-subtitle">Update the album information.</p>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
-        <div class="flash {{ category }}" role="alert">
-            {{ message }}
-        </div>
+      {% if category.startswith('album-') %}
+        {% set base_category = category.replace('album-', '') %}
+        <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
+      {% else %}
+        <div class="flash {{ category }}" role="alert">{{ message }}</div>
+      {% endif %}
     {% endfor %}
-{% endwith %}
+  {% endwith %}
 
-<section class="album-edit-form">
-    <form method="POST"
-          action="{{ url_for('albums.view_album', album_id=album._id) }}">
+  <form method="POST" action="{{ url_for('albums.edit_album', album_id=album._id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <input type="hidden"
-               name="csrf_token"
-               value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label for="title">Album Title</label>
+      <input type="text" id="title" name="title" value="{{ album.title }}" required>
+    </div>
 
-        <div class="form-group">
-            <label for="status">Listening status</label>
-            <select id="status" name="status" required>
-                <option value="want_to_listen"
-                    {% if album.status == 'want_to_listen' %}selected{% endif %}>
-                    Want to listen
-                </option>
+    <div class="form-group">
+      <label for="artist">Artist</label>
+      <input type="text" id="artist" name="artist" value="{{ album.artist }}" required>
+    </div>
 
-                <option value="listened"
-                    {% if album.status == 'listened' %}selected{% endif %}>
-                    Listened
-                </option>
-            </select>
-        </div>
+    <div class="form-group">
+      <label for="year">Release Year (optional)</label>
+      <input type="number" id="year" name="year" min="1900" max="9999" value="{{ album.year if album.year else '' }}">
+    </div>
 
-        <div class="form-group">
-            <label for="rating">Rating (optional, 1–5)</label>
+    <button type="submit" class="add-album-button">Save Changes</button>
+  </form>
 
-            <input type="number"
-                   id="rating"
-                   name="rating"
-                   min="1"
-                   max="5"
-                   step="0.5"
-                   value="{{ album.rating if album.rating is not none else '' }}">
-        </div>
-
-        <div class="form-group">
-            <label for="review">Review (optional)</label>
-
-            <textarea id="review"
-                      name="review"
-                      rows="6"
-                      placeholder="Write your thoughts...">{{ album.review if album.review else '' }}</textarea>
-        </div>
-
-        <button type="submit" class="submit-button">
-            Save changes
-        </button>
-
-        <a class="album-secondary-link"
-           href="{{ url_for('albums.view_album', album_id=album._id) }}">
-            Cancel
-        </a>
-    </form>
+  <p><a href="{{ url_for('albums.view_album', album_id=album._id) }}">Cancel</a></p>
 </section>
 {% endblock %}

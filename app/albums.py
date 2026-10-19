@@ -173,6 +173,62 @@ def add_album():
     return redirect(url_for("albums.view_album", album_id=str(result.inserted_id)))
 
 
+@albums_bp.route("/a/<album_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_album(album_id: str):
+    """Edit album details (title, artist, year) - owner only."""
+    # Fetch album
+    album = get_album_by_id(album_id)
+    if album is None:
+        abort(404)
+
+    # Check if user is owner
+    current_uid = _current_user_id()
+    if current_uid != str(album["user_id"]):
+        abort(403)
+
+    # Handle GET request (display edit form)
+    if request.method == "GET":
+        return render_template("edit_album.html", album=album)
+
+    # Handle POST request (update album details)
+    title = request.form.get("title", "").strip()
+    artist = request.form.get("artist", "").strip()
+    year_str = request.form.get("year", "").strip()
+
+    # Validate required fields
+    if not title or not artist:
+        flash("Title and artist are required", "album-error")
+        return redirect(url_for("albums.edit_album", album_id=album_id))
+
+    # Validate year
+    year = None
+    if year_str:
+        try:
+            year = int(year_str)
+        except ValueError:
+            flash("Year must be a number from 1900 to 9999", "album-error")
+            return redirect(url_for("albums.edit_album", album_id=album_id))
+        if not 1900 <= year <= 9999:
+            flash("Year must be a number from 1900 to 9999", "album-error")
+            return redirect(url_for("albums.edit_album", album_id=album_id))
+
+    # Update album
+    get_db().albums.update_one(
+        {"_id": ObjectId(album_id)},
+        {
+            "$set": {
+                "title": title,
+                "artist": artist,
+                "year": year,
+            }
+        },
+    )
+
+    flash("Album details updated successfully!", "album-success")
+    return redirect(url_for("albums.view_album", album_id=album_id))
+
+
 @albums_bp.route("/a/<album_id>", methods=["GET", "POST"])
 def view_album(album_id: str):
     """View album details and allow owner to edit rating/review."""
@@ -195,14 +251,14 @@ def view_album(album_id: str):
 
         # Validate status
         if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
-            flash("Invalid status", "error")
+            flash("Invalid status", "review-error")
             return redirect(url_for("albums.view_album", album_id=album_id))
 
         # Validate and parse rating
         try:
             rating = parse_rating(rating_str)
         except ValueError:
-            flash("Rating must be a number from 1 to 5 in steps of 0.5", "error")
+            flash("Rating must be a number from 1 to 5 in steps of 0.5", "review-error")
             return redirect(url_for("albums.view_album", album_id=album_id))
 
         # Only listened albums carry a rating
@@ -221,7 +277,7 @@ def view_album(album_id: str):
             },
         )
 
-        flash("Album updated successfully!", "success")
+        flash("Review updated successfully!", "review-success")
         return redirect(url_for("albums.view_album", album_id=album_id))
 
     # Handle GET request (display album)
