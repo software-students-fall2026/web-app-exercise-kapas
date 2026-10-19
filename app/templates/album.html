@@ -6,6 +6,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/album.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -21,7 +22,24 @@
     Added by <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">{{ owner.username }}</a>
     &middot; {{ created_date }}
   </p>
+  {% if is_owner %}
+  <div class="album-actions">
+    <a href="{{ url_for('albums.edit_album', album_id=album._id) }}" class="album-secondary-link">Edit Album Details</a>
+  </div>
+  {% endif %}
 </div>
+
+<!-- Flash Messages (Album Details) -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% if category.startswith('album-') %}
+        {% set base_category = category.replace('album-', '') %}
+        <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
 <!-- Status Badge -->
 <div class="album-status">
@@ -53,9 +71,14 @@
   <h2>{% if album.rating or album.review %}Edit{% else %}Add{% endif %} Rating & Review</h2>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="flash {{ category }}" role="alert">{{ message }}</div>
-    {% endfor %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {% if category.startswith('review-') %}
+          {% set base_category = category.replace('review-', '') %}
+          <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
   {% endwith %}
 
   <form method="POST">
