@@ -31,6 +31,26 @@ main {
     padding: 24px 16px;
 }
 
+.flash {
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.flash.error {
+    background: #fdecea;
+    border-color: #f5c2c0;
+    color: #8a1f17;
+}
+
+.flash.success {
+    background: #e8f5e9;
+    border-color: #b7dfb9;
+    color: #1e5a22;
+}
+
 /* Album List */
 .album-list {
     list-style: none;
