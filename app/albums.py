@@ -102,11 +102,15 @@ def parse_rating(rating_str: str) -> Optional[float]:
 
 
 def format_created_date(created_at: datetime) -> str:
-    """Format created_at timestamp for display."""
-    now = datetime.now(created_at.tzinfo)
-    diff = now - created_at
+    """Format created_at timestamp for display.
 
-    if diff.days == 0:
+    pymongo returns naive datetimes that hold UTC, so treat a missing tzinfo as UTC.
+    """
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+    diff = datetime.now(timezone.utc) - created_at
+
+    if diff.days <= 0:
         return "Today"
     elif diff.days == 1:
         return "Yesterday"
@@ -311,7 +315,7 @@ def view_album(album_id: str):
     is_owner = _current_user_id() == str(album["user_id"])
 
     # Format created date
-    created_date = format_created_date(album.get("created_at", datetime.now()))
+    created_date = format_created_date(album.get("created_at", datetime.now(timezone.utc)))
 
     return render_template(
         "album.html",

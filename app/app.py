@@ -13,7 +13,10 @@ from profiles import profiles_bp
 from albums import albums_bp
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError('SECRET_KEY is not set. Add it to your .env file (see env.example).')
+app.config['SECRET_KEY'] = secret_key
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
@@ -22,6 +25,7 @@ csrf = CSRFProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
+login_manager.login_message_category = 'error'
 
 @login_manager.user_loader
 def load_user(user_id):
