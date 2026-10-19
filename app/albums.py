@@ -1,6 +1,7 @@
 """Album detail view - public to view, owner-only controls for editing."""
 
 import math
+import re
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -23,6 +24,49 @@ STATUS_LISTENED = "listened"
 STATUS_WANT_TO_LISTEN = "want_to_listen"
 
 albums_bp = Blueprint("albums", __name__)
+
+
+@albums_bp.get("/search")
+def search_albums():
+    """Search albums by title or artist, optionally filtering by status."""
+    query = request.args.get("q", "").strip()
+    status = request.args.get("status", "").strip()
+    if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
+        status = ""
+
+    results = []
+    if query or status:
+        album_filter: dict[str, Any] = {}
+        if query:
+            escaped_query = re.escape(query)
+            album_filter["$or"] = [
+                {"title": {"$regex": escaped_query, "$options": "i"}},
+                {"artist": {"$regex": escaped_query, "$options": "i"}},
+            ]
+        if status:
+            album_filter["status"] = status
+
+        db = get_db()
+        albums = list(db.albums.find(album_filter))
+        user_ids = {album["user_id"] for album in albums if "user_id" in album}
+        owners = {
+            owner["_id"]: owner["username"]
+            for owner in db.users.find(
+                {"_id": {"$in": list(user_ids)}}, {"username": 1}
+            )
+        }
+        results = [
+            {**album, "owner_username": owners[album["user_id"]]}
+            for album in albums
+            if album.get("user_id") in owners
+        ]
+
+    return render_template(
+        "search.html",
+        query=query,
+        status=status,
+        results=results,
+    )
 
 
 def _current_user_id() -> Optional[str]:
