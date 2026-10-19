@@ -9,24 +9,42 @@
 {% endblock %}
 
 
-{% macro album_list(albums, show_rating) %}
+{% macro album_list(albums, show_rating, is_owner) %}
 <ul class="album-list">
     {% for album in albums %}
     <li class="album">
         <a href="{{ url_for('albums.view_album', album_id=album._id) }}">
             <strong>{{ album.title }}</strong>
         </a> by {{ album.artist }}
-        {% if album.year %}({{ album.year }}){% endif %}
+
+        {% if album.year %}
+        ({{ album.year }})
+        {% endif %}
+
         {% if show_rating and album.rating %}
         <span class="rating">{{ album.rating }}/5</span>
         {% endif %}
+
         {% if album.review %}
         <p class="review">{{ album.review }}</p>
+        {% endif %}
+
+        {% if is_owner %}
+        <div class="album-actions">
+            <a href="{{ url_for('albums.edit_album', album_id=album._id) }}">
+                Edit
+            </a>
+
+            <a href="{{ url_for('albums.delete_album', album_id=album._id) }}">
+                Delete
+            </a>
+        </div>
         {% endif %}
     </li>
     {% endfor %}
 </ul>
 {% endmacro %}
+
 
 {% block content %}
 
@@ -42,7 +60,7 @@
 
     {% if is_owner %}
     <div class="profile-actions">
-        <a href="/add-album" class="add-album-link">
+        <a href="{{ url_for('albums.add_album') }}" class="add-album-link">
             + Add Album
         </a>
     </div>
@@ -58,31 +76,39 @@
     {{ profile.username }} hasn't added any albums yet.
     {% endif %}
 </p>
+
 {% else %}
+
 <p class="summary profile-summary">
     {{ profile.album_count }} album{{ "" if profile.album_count == 1 else "s" }}
+
     {% if profile.average_rating is not none %}
     &middot; average rating {{ profile.average_rating }}/5
     {% endif %}
 </p>
 
+
 <section class="profile-section">
     <h2>Listened</h2>
+
     {% if profile.listened %}
-    {{ album_list(profile.listened, true) }}
+    {{ album_list(profile.listened, true, is_owner) }}
     {% else %}
     <p class="empty">No listened albums yet.</p>
     {% endif %}
 </section>
 
+
 <section class="profile-section">
     <h2>Want to listen</h2>
+
     {% if profile.want_to_listen %}
-    {{ album_list(profile.want_to_listen, false) }}
+    {{ album_list(profile.want_to_listen, false, is_owner) }}
     {% else %}
     <p class="empty">Nothing on the list yet.</p>
     {% endif %}
 </section>
+
 {% endif %}
 
 {% endblock %}

@@ -228,6 +228,27 @@ def edit_album(album_id: str):
     flash("Album details updated successfully!", "album-success")
     return redirect(url_for("albums.view_album", album_id=album_id))
 
+@albums_bp.route("/a/<album_id>/delete", methods=["GET", "POST"])
+@login_required
+def delete_album(album_id: str):
+    album = get_album_by_id(album_id)
+
+    if album is None:
+        abort(404)
+
+    if str(current_user._id) != str(album["user_id"]):
+        abort(403)
+
+    if request.method == "GET":
+        return render_template("delete_album.html", album=album)
+
+    get_db().albums.delete_one(
+        {"_id": ObjectId(album_id)}
+    )
+
+    flash("Album deleted successfully!", "success")
+
+    return redirect(url_for("profiles.my_profile"))
 
 @albums_bp.route("/a/<album_id>", methods=["GET", "POST"])
 def view_album(album_id: str):
