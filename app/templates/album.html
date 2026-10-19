@@ -23,11 +23,18 @@
     &middot; {{ created_date }}
   </p>
   {% if is_owner %}
-  <div class="album-actions">
-    <a href="{{ url_for('albums.edit_album', album_id=album._id) }}" class="album-secondary-link">Edit Album Details</a>
-  </div>
-  {% endif %}
+<div class="album-actions">
+  <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
+     class="album-secondary-link">
+    Edit Album Details
+  </a>
+
+  <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
+     class="album-secondary-link">
+    Delete Album
+  </a>
 </div>
+{% endif %}
 
 <!-- Flash Messages (Album Details) -->
 {% with messages = get_flashed_messages(with_categories=true) %}
