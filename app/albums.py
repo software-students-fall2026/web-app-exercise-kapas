@@ -202,7 +202,7 @@ def edit_album(album_id: str):
 
     # Validate required fields
     if not title or not artist:
-        flash("Title and artist are required", "album-error")
+        flash("Title and artist are required", "error")
         return redirect(url_for("albums.edit_album", album_id=album_id))
 
     # Validate year
@@ -211,10 +211,10 @@ def edit_album(album_id: str):
         try:
             year = int(year_str)
         except ValueError:
-            flash("Year must be a number from 1900 to 9999", "album-error")
+            flash("Year must be a number from 1900 to 9999", "error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
         if not 1900 <= year <= 9999:
-            flash("Year must be a number from 1900 to 9999", "album-error")
+            flash("Year must be a number from 1900 to 9999", "error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
 
     # Update album
@@ -229,7 +229,7 @@ def edit_album(album_id: str):
         },
     )
 
-    flash("Album details updated successfully!", "album-success")
+    flash("Album details updated successfully!", "success")
     return redirect(url_for("albums.view_album", album_id=album_id))
 
 @albums_bp.route("/a/<album_id>/delete", methods=["GET", "POST"])
@@ -277,14 +277,14 @@ def view_album(album_id: str):
         # Validate status
         if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
             flash("Invalid status", "review-error")
-            return redirect(url_for("albums.view_album", album_id=album_id))
+            return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
         # Validate and parse rating
         try:
             rating = parse_rating(rating_str)
         except ValueError:
             flash("Rating must be a number from 1 to 5 in steps of 0.5", "review-error")
-            return redirect(url_for("albums.view_album", album_id=album_id))
+            return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
         # Only listened albums carry a rating
         if status == STATUS_WANT_TO_LISTEN:
@@ -303,7 +303,7 @@ def view_album(album_id: str):
         )
 
         flash("Review updated successfully!", "review-success")
-        return redirect(url_for("albums.view_album", album_id=album_id))
+        return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
     # Handle GET request (display album)
     # Fetch owner info

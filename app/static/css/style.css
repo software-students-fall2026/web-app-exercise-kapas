@@ -25,6 +25,19 @@ nav a {
     color: black;
 }
 
+.nav-logout {
+    display: inline;
+}
+
+.nav-logout button {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: black;
+    cursor: pointer;
+}
+
 main {
     max-width: 480px;
     margin: 0 auto;

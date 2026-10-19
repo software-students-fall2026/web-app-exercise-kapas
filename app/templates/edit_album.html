@@ -11,17 +11,6 @@
   <h1>Edit Album Details</h1>
   <p class="add-album-subtitle">Update the album information.</p>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      {% if category.startswith('album-') %}
-        {% set base_category = category.replace('album-', '') %}
-        <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
-      {% else %}
-        <div class="flash {{ category }}" role="alert">{{ message }}</div>
-      {% endif %}
-    {% endfor %}
-  {% endwith %}
-
   <form method="POST" action="{{ url_for('albums.edit_album', album_id=album._id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
