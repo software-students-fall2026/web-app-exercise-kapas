@@ -12,8 +12,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}
-"
+        href="{{ url_for('static', filename='css/style.css') }}"
     >
     
     {% block head %}{% endblock %}
@@ -26,10 +25,27 @@
             <a href="/">Home</a>
             <a href="/search">Search</a>
             <a href="{{ url_for('profiles.my_profile') }}">Profile</a>
+            {% if current_user.is_authenticated %}
+            <form class="nav-logout" method="POST" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">Log out</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}">Log in</a>
+            <a href="{{ url_for('auth.register') }}">Register</a>
+            {% endif %}
         </nav>
     </header>
 
     <main>
+        {% block flashes %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% endblock %}
+
         {% block content %}
         {% endblock %}
     </main>

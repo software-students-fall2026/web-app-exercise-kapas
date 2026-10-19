@@ -4,6 +4,7 @@ from models import User
 
 auth_bp = Blueprint('auth', __name__)
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
@@ -25,7 +26,7 @@ def login():
             login_user(user)
             flash('Login successful!', 'success')
             next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('home'))
+            return redirect(next_page)
         else:
             flash('Invalid username or password', 'error')
             return render_template('login.html')
