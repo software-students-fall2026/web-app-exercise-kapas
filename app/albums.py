@@ -34,32 +34,30 @@ def search_albums():
     if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
         status = ""
 
-    results = []
-    if query or status:
-        album_filter: dict[str, Any] = {}
-        if query:
-            escaped_query = re.escape(query)
-            album_filter["$or"] = [
-                {"title": {"$regex": escaped_query, "$options": "i"}},
-                {"artist": {"$regex": escaped_query, "$options": "i"}},
-            ]
-        if status:
-            album_filter["status"] = status
-
-        db = get_db()
-        albums = list(db.albums.find(album_filter))
-        user_ids = {album["user_id"] for album in albums if "user_id" in album}
-        owners = {
-            owner["_id"]: owner["username"]
-            for owner in db.users.find(
-                {"_id": {"$in": list(user_ids)}}, {"username": 1}
-            )
-        }
-        results = [
-            {**album, "owner_username": owners[album["user_id"]]}
-            for album in albums
-            if album.get("user_id") in owners
+    album_filter: dict[str, Any] = {}
+    if query:
+        escaped_query = re.escape(query)
+        album_filter["$or"] = [
+            {"title": {"$regex": escaped_query, "$options": "i"}},
+            {"artist": {"$regex": escaped_query, "$options": "i"}},
         ]
+    if status:
+        album_filter["status"] = status
+
+    db = get_db()
+    albums = list(db.albums.find(album_filter).sort("created_at", -1).limit(50))
+    user_ids = {album["user_id"] for album in albums if "user_id" in album}
+    owners = {
+        owner["_id"]: owner["username"]
+        for owner in db.users.find(
+            {"_id": {"$in": list(user_ids)}}, {"username": 1}
+        )
+    }
+    results = [
+        {**album, "owner_username": owners[album["user_id"]]}
+        for album in albums
+        if album.get("user_id") in owners
+    ]
 
     return render_template(
         "search.html",

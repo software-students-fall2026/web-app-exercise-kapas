@@ -38,15 +38,21 @@ Search - Album Tracker
     </div>
 </form>
 
-{% if not has_search %}
-<p class="empty">Search for an album by title or artist.</p>
-{% elif not results %}
+{% if not results %}
 <p class="empty">
+    {% if has_search %}
     No albums found{% if query %} for "{{ query }}"{% endif %}.
+    {% else %}
+    No albums have been added yet.
+    {% endif %}
 </p>
 {% else %}
 <p class="search-summary">
+    {% if has_search %}
     {{ results | length }} result{{ "" if results | length == 1 else "s" }}
+    {% else %}
+    Showing {{ results | length }} recent album{{ "" if results | length == 1 else "s" }}
+    {% endif %}
 </p>
 
 <ul class="album-list">
