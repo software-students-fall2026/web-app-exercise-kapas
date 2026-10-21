@@ -37,5 +37,5 @@ python3 app/app.py
 
 ## Task boards
 
-[Sprint 1](https://github.com/orgs/software-students-fall2026/projects/1)
+[Sprint 1](https://github.com/orgs/software-students-fall2026/projects/1)\
 [Sprint 2](https://github.com/orgs/software-students-fall2026/projects/63)
