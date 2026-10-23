@@ -22,9 +22,21 @@
 
     <header>
         <nav>
-            <a href="/">Home</a>
-            <a href="/search">Search</a>
-            <a href="{{ url_for('profiles.my_profile') }}">Profile</a>
+            <a href="{{ url_for('home') }}"
+                {% if request.endpoint == 'home' %}aria-current="page"{% endif %}>
+                    Home
+            </a>
+
+            <a href="{{ url_for('albums.search_albums') }}"
+            {% if request.endpoint == 'albums.search_albums' %}aria-current="page"{% endif %}>
+                Search
+            </a>
+
+            <a href="{{ url_for('profiles.my_profile') }}"
+            {% if request.blueprint == 'profiles' %}aria-current="page"{% endif %}>
+                Profile
+            </a>
+            
             {% if current_user.is_authenticated %}
             <form class="nav-logout" method="POST" action="{{ url_for('auth.logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
