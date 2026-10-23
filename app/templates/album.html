@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_cover.html" import cover %}
 
 {% block title %}
 {{ album.title }} by {{ album.artist }} - Album Tracker
@@ -22,6 +23,7 @@
 
 <!-- Album Header Section -->
 <div class="album-header">
+  {{ cover(album, "large") }}
   <h1>{{ album.title }}</h1>
   <p class="album-artist">by {{ album.artist }}</p>
   {% if album.year %}

@@ -1,0 +1,11 @@
+{# Renders an album's cover, or a placeholder when it has none. size: "thumb" or "large". #}
+{% macro cover(album, size="thumb") %}
+{% if album.cover_id %}
+<img class="album-cover album-cover-{{ size }}"
+     src="{{ url_for('covers.get_cover', cover_id=album.cover_id) }}"
+     alt="Cover of {{ album.title }} by {{ album.artist }}"
+     loading="lazy">
+{% else %}
+<div class="album-cover album-cover-{{ size }}" role="img" aria-label="No cover for {{ album.title }}">&#9835;</div>
+{% endif %}
+{% endmacro %}
