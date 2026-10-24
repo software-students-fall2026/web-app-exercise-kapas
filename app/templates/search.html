@@ -1,22 +1,36 @@
 {% extends "base.html" %}
 
 {% block title %}
+{% if add_mode %}
+Add an Album - Album Tracker
+{% else %}
 Search - Album Tracker
+{% endif %}
 {% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 {% endblock %}
 
-{# Expects: query (str), status (str: "", "listened" or "want_to_listen"), results (list of album dicts, each with owner_username) #}
 {% block content %}
 {% set has_search = query or status %}
 
+{% if add_mode %}
+<h1>Add an album</h1>
+<p class="search-subtitle">Search for an album that already exists.</p>
+{% else %}
 <h1>Search albums</h1>
+{% endif %}
 
 <form class="search-form" method="GET" action="" role="search">
+
+    {% if add_mode %}
+    <input type="hidden" name="mode" value="add">
+    {% endif %}
+
     <div class="search-row">
         <label class="visually-hidden" for="q">Title or artist</label>
+
         <input
             type="search"
             id="q"
@@ -25,49 +39,143 @@ Search - Album Tracker
             placeholder="Search by title or artist"
             autocomplete="off"
         >
+
         <button type="submit" class="search-button">Search</button>
     </div>
 
+    {% if not add_mode %}
     <div class="search-filter">
         <label for="status">Status</label>
+
         <select id="status" name="status">
             <option value="" {% if not status %}selected{% endif %}>All</option>
-            <option value="listened" {% if status == 'listened' %}selected{% endif %}>Listened</option>
-            <option value="want_to_listen" {% if status == 'want_to_listen' %}selected{% endif %}>Want to listen</option>
+            <option value="listened" {% if status == 'listened' %}selected{% endif %}>
+                Listened
+            </option>
+            <option value="want_to_listen" {% if status == 'want_to_listen' %}selected{% endif %}>
+                Want to listen
+            </option>
         </select>
     </div>
+    {% endif %}
+
 </form>
 
+{% if add_mode %}
+<p class="manual-add">
+    Can't find it?
+    <a href="{{ url_for('albums.add_album', manual=1) }}">
+        Add a new album manually
+    </a>
+</p>
+{% endif %}
+
 {% if not has_search %}
-<p class="empty">Search for an album by title or artist.</p>
+
+<p class="empty">
+    {% if add_mode %}
+    Search for an album to add.
+    {% else %}
+    Search for an album by title or artist.
+    {% endif %}
+</p>
+
 {% elif not results %}
+
 <p class="empty">
     No albums found{% if query %} for "{{ query }}"{% endif %}.
 </p>
+
 {% else %}
+
 <p class="search-summary">
     {{ results | length }} result{{ "" if results | length == 1 else "s" }}
 </p>
 
 <ul class="album-list">
+
     {% for album in results %}
+
     <li class="album">
-        <a href="{{ url_for('albums.view_album', album_id=album._id) }}">
-            <strong>{{ album.title }}</strong>
-        </a> by {{ album.artist }}
-        {% if album.year %}({{ album.year }}){% endif %}
+
+        <div class="album-result-header">
+
+            <div>
+                <a href="{{ url_for('albums.view_album', album_id=album.album_id) }}">
+                    <strong>{{ album.title }}</strong>
+                </a>
+
+                by {{ album.artist }}
+
+                {% if album.year %}
+                ({{ album.year }})
+                {% endif %}
+            </div>
+
+            {% if add_mode %}
+            <a
+                class="add-existing-button"
+                href="{{ url_for('albums.add_album', source=album.album_id) }}"
+            >
+                Add this album
+            </a>
+            {% endif %}
+
+        </div>
+
         <p class="search-meta">
             Added by
-            <a href="{{ url_for('profiles.view_profile', username=album.owner_username) }}">{{ album.owner_username }}</a>
-            &middot;
-            {{ "Listened" if album.status == "listened" else "Want to listen" }}
-            {% if album.status == "listened" and album.rating %}
-            &middot; <span class="rating">{{ album.rating }}/5</span>
+            <a href="{{ url_for('profiles.view_profile', username=album.entries[0].owner_username) }}">
+                {{ album.entries[0].owner_username }}
+            </a>
+
+            {% if album.user_count > 1 %}
+            + {{ album.user_count - 1 }}
+            other{{ "" if album.user_count == 2 else "s" }}
             {% endif %}
         </p>
+
+        {% if album.average_rating is not none %}
+        <p class="search-meta">
+            Average rating: {{ album.average_rating }}/5
+        </p>
+        {% endif %}
+
+        <details class="album-ratings">
+            <summary>View ratings and status</summary>
+
+            {% for entry in album.entries %}
+
+            <div class="album-entry">
+
+                <a href="{{ url_for('profiles.view_profile', username=entry.owner_username) }}">
+                    {{ entry.owner_username }}
+                </a>
+
+                &middot;
+
+                {{ "Listened" if entry.status == "listened" else "Want to listen" }}
+
+                {% if entry.status == "listened" and entry.rating %}
+                &middot; {{ entry.rating }}/5
+                {% endif %}
+
+                {% if entry.review %}
+                <p class="entry-review">{{ entry.review }}</p>
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </details>
+
     </li>
+
     {% endfor %}
+
 </ul>
+
 {% endif %}
 
 {% endblock %}

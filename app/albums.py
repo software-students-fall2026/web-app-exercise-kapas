@@ -11,6 +11,7 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -31,41 +32,96 @@ def search_albums():
     """Search albums by title or artist, optionally filtering by status."""
     query = request.args.get("q", "").strip()
     status = request.args.get("status", "").strip()
+    add_mode = request.args.get("mode", "").strip() == "add"
+
     if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
         status = ""
 
     results = []
+
     if query or status:
         album_filter: dict[str, Any] = {}
+
         if query:
             escaped_query = re.escape(query)
             album_filter["$or"] = [
                 {"title": {"$regex": escaped_query, "$options": "i"}},
                 {"artist": {"$regex": escaped_query, "$options": "i"}},
             ]
-        if status:
+
+        if status and not add_mode:
             album_filter["status"] = status
 
         db = get_db()
         albums = list(db.albums.find(album_filter))
-        user_ids = {album["user_id"] for album in albums if "user_id" in album}
+
+        user_ids = {
+            album["user_id"]
+            for album in albums
+            if "user_id" in album
+        }
+
         owners = {
             owner["_id"]: owner["username"]
             for owner in db.users.find(
-                {"_id": {"$in": list(user_ids)}}, {"username": 1}
+                {"_id": {"$in": list(user_ids)}},
+                {"username": 1},
             )
         }
-        results = [
-            {**album, "owner_username": owners[album["user_id"]]}
-            for album in albums
-            if album.get("user_id") in owners
-        ]
+
+        grouped = {}
+
+        for album in albums:
+            if album.get("user_id") not in owners:
+                continue
+
+            key = (
+                album.get("title", "").strip().lower(),
+                album.get("artist", "").strip().lower(),
+                album.get("year"),
+            )
+
+            if key not in grouped:
+                grouped[key] = {
+                    "title": album.get("title"),
+                    "artist": album.get("artist"),
+                    "year": album.get("year"),
+                    "album_id": album["_id"],
+                    "entries": [],
+                }
+
+            grouped[key]["entries"].append(
+                {
+                    "_id": album["_id"],
+                    "owner_username": owners[album["user_id"]],
+                    "status": album.get("status"),
+                    "rating": album.get("rating"),
+                    "review": album.get("review"),
+                }
+            )
+
+        results = list(grouped.values())
+
+        for album in results:
+            ratings = [
+                entry["rating"]
+                for entry in album["entries"]
+                if entry.get("rating") is not None
+            ]
+
+            album["user_count"] = len(album["entries"])
+            album["average_rating"] = (
+                round(sum(ratings) / len(ratings), 1)
+                if ratings
+                else None
+            )
 
     return render_template(
         "search.html",
         query=query,
         status=status,
         results=results,
+        add_mode=add_mode,
     )
 
 
@@ -103,7 +159,10 @@ def parse_rating(rating_str: str) -> Optional[float]:
 
 def format_created_date(created_at: datetime) -> str:
     """Format created_at timestamp for display."""
-    now = datetime.now(created_at.tzinfo)
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    now = datetime.now(timezone.utc)
     diff = now - created_at
 
     if diff.days == 0:
@@ -114,6 +173,53 @@ def format_created_date(created_at: datetime) -> str:
         return f"{diff.days} days ago"
     else:
         return created_at.strftime("%B %d, %Y")
+
+
+@albums_bp.get("/a/search-existing")
+@login_required
+def search_existing_albums():
+    query = request.args.get("q", "").strip()
+
+    if len(query) < 2:
+        return jsonify([])
+
+    escaped_query = re.escape(query)
+
+    albums = list(
+        get_db().albums.find(
+            {
+                "title": {
+                    "$regex": escaped_query,
+                    "$options": "i",
+                }
+            }
+        ).limit(10)
+    )
+
+    seen = set()
+    results = []
+
+    for album in albums:
+        key = (
+            album.get("title", "").lower(),
+            album.get("artist", "").lower(),
+            album.get("year"),
+        )
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        results.append(
+            {
+                "title": album.get("title", ""),
+                "artist": album.get("artist", ""),
+                "year": album.get("year"),
+            }
+        )
+
+    return jsonify(results)
 
 
 @albums_bp.route("/a/add", methods=["GET", "POST"])
@@ -141,6 +247,7 @@ def add_album():
         except ValueError:
             flash("Year must be a number from 1900 to 9999", "error")
             return render_template("add_album.html")
+
         if not 1900 <= year <= 9999:
             flash("Year must be a number from 1900 to 9999", "error")
             return render_template("add_album.html")
@@ -170,38 +277,35 @@ def add_album():
             "created_at": datetime.now(timezone.utc),
         }
     )
-    return redirect(url_for("albums.view_album", album_id=str(result.inserted_id)))
+
+    return redirect(
+        url_for("albums.view_album", album_id=str(result.inserted_id))
+    )
 
 
 @albums_bp.route("/a/<album_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_album(album_id: str):
     """Edit album details (title, artist, year) - owner only."""
-    # Fetch album
     album = get_album_by_id(album_id)
     if album is None:
         abort(404)
 
-    # Check if user is owner
     current_uid = _current_user_id()
     if current_uid != str(album["user_id"]):
         abort(403)
 
-    # Handle GET request (display edit form)
     if request.method == "GET":
         return render_template("edit_album.html", album=album)
 
-    # Handle POST request (update album details)
     title = request.form.get("title", "").strip()
     artist = request.form.get("artist", "").strip()
     year_str = request.form.get("year", "").strip()
 
-    # Validate required fields
     if not title or not artist:
         flash("Title and artist are required", "album-error")
         return redirect(url_for("albums.edit_album", album_id=album_id))
 
-    # Validate year
     year = None
     if year_str:
         try:
@@ -209,11 +313,11 @@ def edit_album(album_id: str):
         except ValueError:
             flash("Year must be a number from 1900 to 9999", "album-error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
+
         if not 1900 <= year <= 9999:
             flash("Year must be a number from 1900 to 9999", "album-error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
 
-    # Update album
     get_db().albums.update_one(
         {"_id": ObjectId(album_id)},
         {
@@ -227,6 +331,7 @@ def edit_album(album_id: str):
 
     flash("Album details updated successfully!", "album-success")
     return redirect(url_for("albums.view_album", album_id=album_id))
+
 
 @albums_bp.route("/a/<album_id>/delete", methods=["GET", "POST"])
 @login_required
@@ -250,43 +355,36 @@ def delete_album(album_id: str):
 
     return redirect(url_for("profiles.my_profile"))
 
+
 @albums_bp.route("/a/<album_id>", methods=["GET", "POST"])
 def view_album(album_id: str):
     """View album details and allow owner to edit rating/review."""
-    # Fetch album
     album = get_album_by_id(album_id)
     if album is None:
         abort(404)
 
-    # Handle POST request (update rating/review)
     if request.method == "POST":
-        # Check if user is owner
         current_uid = _current_user_id()
         if current_uid != str(album["user_id"]):
             abort(403)
 
-        # Extract form data
         status = request.form.get("status", "").strip()
         rating_str = request.form.get("rating", "").strip()
         review = request.form.get("review", "").strip()
 
-        # Validate status
         if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
             flash("Invalid status", "review-error")
             return redirect(url_for("albums.view_album", album_id=album_id))
 
-        # Validate and parse rating
         try:
             rating = parse_rating(rating_str)
         except ValueError:
             flash("Rating must be a number from 1 to 5 in steps of 0.5", "review-error")
             return redirect(url_for("albums.view_album", album_id=album_id))
 
-        # Only listened albums carry a rating
         if status == STATUS_WANT_TO_LISTEN:
             rating = None
 
-        # Update album
         get_db().albums.update_one(
             {"_id": ObjectId(album_id)},
             {
@@ -301,17 +399,15 @@ def view_album(album_id: str):
         flash("Review updated successfully!", "review-success")
         return redirect(url_for("albums.view_album", album_id=album_id))
 
-    # Handle GET request (display album)
-    # Fetch owner info
     owner = get_db().users.find_one({"_id": album["user_id"]})
     if owner is None:
         abort(404)
 
-    # Determine if current user is owner
     is_owner = _current_user_id() == str(album["user_id"])
 
-    # Format created date
-    created_date = format_created_date(album.get("created_at", datetime.now()))
+    created_date = format_created_date(
+        album.get("created_at", datetime.now(timezone.utc))
+    )
 
     return render_template(
         "album.html",

@@ -20,9 +20,18 @@
   <form method="POST" action="">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div class="form-group">
+    <div class="form-group album-title-group">
       <label for="title">Album Title</label>
-      <input type="text" id="title" name="title" required>
+
+      <input
+        type="text"
+        id="title"
+        name="title"
+        autocomplete="off"
+        required
+      >
+
+      <div id="album-suggestions" class="album-suggestions"></div>
     </div>
 
     <div class="form-group">
@@ -66,4 +75,79 @@
 
   <p><a href="{{ url_for('profiles.my_profile') }}">Back to Profile</a></p>
 </section>
+
+<script>
+  const titleInput = document.getElementById("title");
+  const artistInput = document.getElementById("artist");
+  const yearInput = document.getElementById("year");
+  const suggestions = document.getElementById("album-suggestions");
+
+  let searchTimeout;
+
+  titleInput.addEventListener("input", function () {
+    clearTimeout(searchTimeout);
+
+    const query = titleInput.value.trim();
+
+    suggestions.innerHTML = "";
+    suggestions.classList.remove("has-results");
+
+    if (query.length < 2) {
+      return;
+    }
+
+    searchTimeout = setTimeout(function () {
+      fetch(
+        "{{ url_for('albums.search_existing_albums') }}?q="
+        + encodeURIComponent(query)
+      )
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (albums) {
+          suggestions.innerHTML = "";
+
+          albums.forEach(function (album) {
+            const suggestion = document.createElement("button");
+
+            suggestion.type = "button";
+            suggestion.className = "album-suggestion";
+
+            let details = album.artist;
+
+            if (album.year) {
+              details += " (" + album.year + ")";
+            }
+
+            suggestion.innerHTML =
+              "<strong>" + album.title + "</strong>" +
+              "<span>" + details + "</span>";
+
+            suggestion.addEventListener("click", function () {
+              titleInput.value = album.title;
+              artistInput.value = album.artist;
+              yearInput.value = album.year || "";
+
+              suggestions.innerHTML = "";
+              suggestions.classList.remove("has-results");
+            });
+
+            suggestions.appendChild(suggestion);
+          });
+
+          if (albums.length > 0) {
+            suggestions.classList.add("has-results");
+          }
+        });
+    }, 250);
+  });
+
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".album-title-group")) {
+      suggestions.innerHTML = "";
+      suggestions.classList.remove("has-results");
+    }
+  });
+</script>
+
 {% endblock %}
