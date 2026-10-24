@@ -35,6 +35,14 @@ Search - Album Tracker
             <option value="listened" {% if status == 'listened' %}selected{% endif %}>Listened</option>
             <option value="want_to_listen" {% if status == 'want_to_listen' %}selected{% endif %}>Want to listen</option>
         </select>
+
+        <label for="sort">Sort by</label>
+        <select id="sort" name="sort">
+            <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recently added</option>
+            <option value="title" {% if sort == 'title' %}selected{% endif %}>Album name</option>
+            <option value="artist" {% if sort == 'artist' %}selected{% endif %}>Artist name</option>
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Average rating</option>
+        </select>
     </div>
 </form>
 

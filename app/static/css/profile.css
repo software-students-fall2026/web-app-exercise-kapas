@@ -42,6 +42,34 @@
     color: #555;
 }
 
+.sort-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -12px 0 24px;
+    font-size: 14px;
+    color: #555;
+}
+
+.sort-form select,
+.sort-form button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.sort-form button {
+    border: none;
+    background: #111;
+    color: white;
+    cursor: pointer;
+}
+
+.sort-form button:hover {
+    background: #333;
+}
+
 .profile-section {
     margin-bottom: 28px;
 }
