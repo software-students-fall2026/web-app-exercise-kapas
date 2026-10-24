@@ -22,6 +22,10 @@
     font-weight: bold;
 }
 
+.profile-avatar-image {
+    object-fit: cover;
+}
+
 .profile-header h1 {
     font-size: 24px;
     margin: 0 0 4px;
@@ -87,9 +91,13 @@
 
 .profile-actions {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.add-album-link {
+.add-album-link,
+.edit-profile-link {
     display: inline-block;
     padding: 10px 14px;
     background: #111;
@@ -101,6 +109,117 @@
     white-space: nowrap;
 }
 
-.add-album-link:hover {
+.add-album-link:hover,
+.edit-profile-link:hover {
     background: #333;
+}
+
+.edit-profile-container {
+    max-width: 440px;
+    margin: 24px auto;
+    padding: 32px 24px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.edit-profile-container h1 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.edit-profile-subtitle {
+    margin-bottom: 28px;
+    color: #666;
+}
+
+.edit-profile-picture {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.edit-profile-field {
+    margin-bottom: 20px;
+}
+
+.edit-profile-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.edit-profile-field input {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    color: #111;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 16px;
+}
+
+.edit-profile-field input:focus {
+    outline: 2px solid #333;
+    outline-offset: 2px;
+}
+
+.remove-profile-picture {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.edit-profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.edit-profile-actions .add-album-button {
+    width: 100%;
+    padding: 14px;
+    background: #111;
+    color: white;
+    border: 0;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-profile-actions .add-album-button:hover {
+    background: #333;
+}
+
+.edit-profile-cancel {
+    padding: 12px;
+    color: #111;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.edit-profile-cancel:hover {
+    background: #f5f5f5;
+}
+
+@media (max-width: 480px) {
+    .edit-profile-container {
+        margin: 16px auto;
+        padding: 24px 16px;
+    }
+
+    .profile-header {
+        flex-wrap: wrap;
+    }
+
+    .profile-actions {
+        width: 100%;
+        margin-left: 0;
+    }
 }
