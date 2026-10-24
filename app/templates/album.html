@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
 {% endblock %}
 
-{# Review messages render next to the review form instead of at the top #}
 {% block flashes %}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages if not category.startswith('review-') %}
@@ -21,109 +20,126 @@
 
 {% block content %}
 
-<!-- Album Header Section -->
 <div class="album-header">
   {{ cover(album, "large") }}
+
   <h1>{{ album.title }}</h1>
   <p class="album-artist">by {{ album.artist }}</p>
+
   {% if album.year %}
-  <p class="album-year">{{ album.year }}</p>
+    <p class="album-year">{{ album.year }}</p>
   {% endif %}
+
   <p class="album-meta">
-    Added by <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">{{ owner.username }}</a>
+    Added by
+    <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">
+      {{ owner.username }}
+    </a>
     &middot; {{ created_date }}
   </p>
+
   {% if is_owner %}
-<div class="album-actions">
-  <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
-     class="album-secondary-link">
-    Edit Album Details
-  </a>
+    <div class="album-actions">
+      <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
+         class="album-secondary-link">
+        Edit Album Details
+      </a>
 
-  <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
-     class="album-secondary-link">
-    Delete Album
-  </a>
-</div>
-{% endif %}
-
-<!-- Status Badge -->
-<div class="album-status">
-  {% if album.status == 'listened' %}
-  <span class="status-badge listened">Listened</span>
-  {% else %}
-  <span class="status-badge want-to-listen">Want to Listen</span>
+      <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
+         class="album-secondary-link">
+        Delete Album
+      </a>
+    </div>
   {% endif %}
 </div>
 
-<!-- Rating Display (if exists and status is listened) -->
+<div class="album-status">
+  {% if album.status == 'listened' %}
+    <span class="status-badge listened">Listened</span>
+  {% else %}
+    <span class="status-badge want-to-listen">Want to Listen</span>
+  {% endif %}
+</div>
+
 {% if album.status == 'listened' and album.rating %}
-<div class="album-rating">
-  <strong>Rating:</strong> {{ album.rating }}/5
-</div>
+  <div class="album-rating">
+    <strong>Rating:</strong> {{ album.rating }}/5
+  </div>
 {% endif %}
 
-<!-- Review Display (if exists) -->
 {% if album.review %}
-<div class="album-review">
-  <h2>Review</h2>
-  <p>{{ album.review }}</p>
-</div>
+  <div class="album-review">
+    <h2>{% if is_owner %}Your Review{% else %}Review{% endif %}</h2>
+    <p>{{ album.review }}</p>
+  </div>
 {% endif %}
 
-<!-- Edit Form (owner only) -->
 {% if is_owner %}
-<div class="album-edit-form" id="review-form">
-  <h2>{% if album.rating or album.review %}Edit{% else %}Add{% endif %} Rating & Review</h2>
+  <section id="review-form">
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages if category.startswith('review-') %}
-      <div class="flash {{ category.replace('review-', '') }}" role="alert">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages if category.startswith('review-') %}
+        <div class="flash {{ category.replace('review-', '') }}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
 
-  <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <details class="album-edit-form"
+             {% if get_flashed_messages(category_filter=['review-error']) %}open{% endif %}>
+      <summary>
+        {% if album.rating or album.review %}
+          Edit Rating & Review
+        {% else %}
+          Add Rating & Review
+        {% endif %}
+      </summary>
 
-    <div class="form-group">
-      <label for="status">Status</label>
-      <select id="status" name="status" required>
-        <option value="want_to_listen" {% if album.status == 'want_to_listen' %}selected{% endif %}>
-          Want to Listen
-        </option>
-        <option value="listened" {% if album.status == 'listened' %}selected{% endif %}>
-          Listened
-        </option>
-      </select>
-    </div>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div class="form-group">
-      <label for="rating">Rating (1-5)</label>
-      <input
-        type="number"
-        id="rating"
-        name="rating"
-        min="1"
-        max="5"
-        step="0.5"
-        value="{{ album.rating if album.rating else '' }}"
-        placeholder="Optional"
-      >
-    </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status" required>
+            <option value="want_to_listen"
+                    {% if album.status == 'want_to_listen' %}selected{% endif %}>
+              Want to Listen
+            </option>
+            <option value="listened"
+                    {% if album.status == 'listened' %}selected{% endif %}>
+              Listened
+            </option>
+          </select>
+        </div>
 
-    <div class="form-group">
-      <label for="review">Review</label>
-      <textarea
-        id="review"
-        name="review"
-        rows="6"
-        placeholder="Share your thoughts about this album..."
-      >{{ album.review if album.review else '' }}</textarea>
-    </div>
+        <div class="form-group">
+          <label for="rating">Rating (1-5)</label>
+          <input
+            type="number"
+            id="rating"
+            name="rating"
+            min="1"
+            max="5"
+            step="0.5"
+            value="{{ album.rating if album.rating else '' }}"
+            placeholder="Optional"
+          >
+        </div>
 
-    <button type="submit" class="submit-button">Save Changes</button>
-  </form>
-</div>
+        <div class="form-group">
+          <label for="review">Review</label>
+          <textarea
+            id="review"
+            name="review"
+            rows="6"
+            placeholder="Share your thoughts about this album..."
+          >{{ album.review if album.review else '' }}</textarea>
+        </div>
+
+        <button type="submit" class="submit-button">Save Changes</button>
+      </form>
+    </details>
+  </section>
 {% endif %}
 
 {% endblock %}
