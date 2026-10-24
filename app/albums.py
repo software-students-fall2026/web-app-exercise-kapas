@@ -11,6 +11,7 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -54,11 +55,47 @@ def search_albums():
             {"_id": {"$in": list(user_ids)}}, {"username": 1}
         )
     }
-    results = [
-        {**album, "owner_username": owners[album["user_id"]]}
-        for album in albums
-        if album.get("user_id") in owners
-    ]
+
+    grouped = {}
+
+    for album in albums:
+        if album.get("user_id") not in owners:
+            continue
+
+        key = (
+            album.get("title", "").lower(),
+            album.get("artist", "").lower(),
+            album.get("year"),
+        )
+
+        entry = {
+            "username": owners[album["user_id"]],
+            "status": album.get("status"),
+            "rating": album.get("rating"),
+            "review": album.get("review"),
+        }
+
+        if key not in grouped:
+            grouped[key] = {
+                **album,
+                "owner_username": owners[album["user_id"]],
+                "entries": [],
+            }
+
+        grouped[key]["entries"].append(entry)
+
+    results = list(grouped.values())
+
+    for album in results:
+        ratings = [
+            entry["rating"]
+            for entry in album["entries"]
+            if entry["rating"] is not None
+        ]
+        album["user_count"] = len(album["entries"])
+        album["average_rating"] = (
+            round(sum(ratings) / len(ratings), 1) if ratings else None
+        )
 
     return render_template(
         "search.html",
@@ -117,6 +154,41 @@ def format_created_date(created_at: datetime) -> str:
         return f"{diff.days} days ago"
     else:
         return created_at.strftime("%B %d, %Y")
+
+
+@albums_bp.get("/a/search-existing")
+@login_required
+def search_existing_albums():
+    query = request.args.get("q", "").strip()
+
+    if len(query) < 2:
+        return jsonify([])
+
+    albums = get_db().albums.find(
+        {"title": {"$regex": re.escape(query), "$options": "i"}}
+    ).limit(10)
+
+    results = []
+    seen = set()
+
+    for album in albums:
+        key = (
+            album.get("title", "").lower(),
+            album.get("artist", "").lower(),
+            album.get("year"),
+        )
+
+        if key not in seen:
+            seen.add(key)
+            results.append(
+                {
+                    "title": album.get("title", ""),
+                    "artist": album.get("artist", ""),
+                    "year": album.get("year"),
+                }
+            )
+
+    return jsonify(results)
 
 
 @albums_bp.route("/a/add", methods=["GET", "POST"])
@@ -181,6 +253,7 @@ def add_album():
             "created_at": datetime.now(timezone.utc),
         }
     )
+
     return redirect(url_for("albums.view_album", album_id=str(result.inserted_id)))
 
 
@@ -241,6 +314,7 @@ def edit_album(album_id: str):
     flash("Album details updated successfully!", "success")
     return redirect(url_for("albums.view_album", album_id=album_id))
 
+
 @albums_bp.route("/a/<album_id>/delete", methods=["GET", "POST"])
 @login_required
 def delete_album(album_id: str):
@@ -263,6 +337,7 @@ def delete_album(album_id: str):
     flash("Album deleted successfully!", "success")
 
     return redirect(url_for("profiles.my_profile"))
+
 
 @albums_bp.route("/a/<album_id>", methods=["GET", "POST"])
 def view_album(album_id: str):

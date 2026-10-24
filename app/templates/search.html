@@ -9,7 +9,6 @@ Search - Album Tracker
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 {% endblock %}
 
-{# Expects: query (str), status (str: "", "listened" or "want_to_listen"), results (list of album dicts, each with owner_username) #}
 {% block content %}
 {% set has_search = query or status %}
 
@@ -60,20 +59,50 @@ Search - Album Tracker
     {% for album in results %}
     <li class="album">
         {{ cover(album) }}
+
         <div class="album-info">
             <a href="{{ url_for('albums.view_album', album_id=album._id) }}">
                 <strong>{{ album.title }}</strong>
             </a> by {{ album.artist }}
+
             {% if album.year %}({{ album.year }}){% endif %}
+
             <p class="search-meta">
                 Added by
-                <a href="{{ url_for('profiles.view_profile', username=album.owner_username) }}">{{ album.owner_username }}</a>
-                &middot;
-                {{ "Listened" if album.status == "listened" else "Want to listen" }}
-                {% if album.status == "listened" and album.rating %}
-                &middot; <span class="rating">{{ album.rating }}/5</span>
+                <a href="{{ url_for('profiles.view_profile', username=album.owner_username) }}">
+                    {{ album.owner_username }}
+                </a>
+
+                {% if album.user_count > 1 %}
+                + {{ album.user_count - 1 }} other{{ "" if album.user_count == 2 else "s" }}
+                {% endif %}
+
+                {% if album.average_rating is not none %}
+                &middot; {{ album.average_rating }}/5 average
                 {% endif %}
             </p>
+
+            <details class="album-ratings">
+                <summary>View ratings and status</summary>
+
+                {% for entry in album.entries %}
+                <div class="album-entry">
+                    <a href="{{ url_for('profiles.view_profile', username=entry.username) }}">
+                        {{ entry.username }}
+                    </a>
+                    &middot;
+                    {{ "Listened" if entry.status == "listened" else "Want to listen" }}
+
+                    {% if entry.status == "listened" and entry.rating %}
+                    &middot; <span class="rating">{{ entry.rating }}/5</span>
+                    {% endif %}
+
+                    {% if entry.review %}
+                    <p class="review">{{ entry.review }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </details>
         </div>
     </li>
     {% endfor %}

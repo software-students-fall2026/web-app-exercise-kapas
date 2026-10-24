@@ -1,6 +1,6 @@
 /* Album Header */
 .album-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .album-header .album-cover {
@@ -40,6 +40,7 @@
 
 /* Status Badge */
 .album-status {
+  margin-top: 12px;
   margin-bottom: 24px;
 }
 
