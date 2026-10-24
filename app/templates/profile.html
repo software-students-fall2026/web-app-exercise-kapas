@@ -91,6 +91,17 @@
     {% endif %}
 </p>
 
+<form class="sort-form" method="GET" action="">
+    <label for="sort">Sort by</label>
+    <select id="sort" name="sort">
+        <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating</option>
+        <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recently added</option>
+        <option value="title" {% if sort == 'title' %}selected{% endif %}>Album name</option>
+        <option value="artist" {% if sort == 'artist' %}selected{% endif %}>Artist name</option>
+    </select>
+    <button type="submit">Sort</button>
+</form>
+
 
 <section class="profile-section">
     <h2>Listened</h2>

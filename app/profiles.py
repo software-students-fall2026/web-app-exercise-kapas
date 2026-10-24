@@ -10,6 +10,7 @@ from flask import (
     current_app,
     redirect,
     render_template,
+    request,
     url_for,
 )
 from flask_login import current_user
@@ -18,6 +19,11 @@ from db import get_db
 
 STATUS_LISTENED = "listened"
 STATUS_WANT_TO_LISTEN = "want_to_listen"
+
+SORT_RECENT = "recent"
+SORT_TITLE = "title"
+SORT_ARTIST = "artist"
+SORT_RATING = "rating"
 
 profiles_bp = Blueprint("profiles", __name__)
 
@@ -34,7 +40,18 @@ def get_user_by_id(user_id: str) -> Optional[dict[str, Any]]:
     return get_db().users.find_one({"_id": ObjectId(user_id)})
 
 
-def get_profile_data(user: dict[str, Any]) -> dict[str, Any]:
+def sort_albums(albums: list[dict[str, Any]], sort: str) -> None:
+    """Sort albums in place. Albums should already be newest first, so ties keep that order."""
+    if sort == SORT_TITLE:
+        albums.sort(key=lambda a: a.get("title", "").lower())
+    elif sort == SORT_ARTIST:
+        albums.sort(key=lambda a: a.get("artist", "").lower())
+    elif sort == SORT_RATING:
+        # Highest first, unrated albums last.
+        albums.sort(key=lambda a: -a["rating"] if a.get("rating") else 1)
+
+
+def get_profile_data(user: dict[str, Any], sort: str = SORT_RATING) -> dict[str, Any]:
     """Build the profile dict the template needs for user.
     """
     albums = list(
@@ -44,7 +61,8 @@ def get_profile_data(user: dict[str, Any]) -> dict[str, Any]:
     want_to_listen = [
         a for a in albums if a.get("status") == STATUS_WANT_TO_LISTEN
     ]
-    listened.sort(key=lambda a: -a["rating"] if a.get("rating") else 1)
+    sort_albums(listened, sort)
+    sort_albums(want_to_listen, sort)
 
     ratings = [a["rating"] for a in listened if a.get("rating")]
     average = round(sum(ratings) / len(ratings), 1) if ratings else None
@@ -89,8 +107,12 @@ def view_profile(username: str) -> str:
     user = get_user_by_username(username)
     if user is None:
         abort(404)
+    sort = request.args.get("sort", "").strip()
+    if sort not in [SORT_RECENT, SORT_TITLE, SORT_ARTIST]:
+        sort = SORT_RATING
     return render_template(
         "profile.html",
-        profile=get_profile_data(user),
+        profile=get_profile_data(user, sort),
+        sort=sort,
         is_owner=_current_user_id() == str(user["_id"]),
     )

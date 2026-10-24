@@ -25,16 +25,24 @@ from db import get_db
 STATUS_LISTENED = "listened"
 STATUS_WANT_TO_LISTEN = "want_to_listen"
 
+SORT_RECENT = "recent"
+SORT_TITLE = "title"
+SORT_ARTIST = "artist"
+SORT_RATING = "rating"
+
 albums_bp = Blueprint("albums", __name__)
 
 
 @albums_bp.get("/search")
 def search_albums():
-    """Search albums by title or artist, optionally filtering by status."""
+    """Search albums by title or artist, optionally filtering by status and sorting."""
     query = request.args.get("q", "").strip()
     status = request.args.get("status", "").strip()
     if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
         status = ""
+    sort = request.args.get("sort", "").strip()
+    if sort not in [SORT_TITLE, SORT_ARTIST, SORT_RATING]:
+        sort = SORT_RECENT
 
     album_filter: dict[str, Any] = {}
     if query:
@@ -97,10 +105,24 @@ def search_albums():
             round(sum(ratings) / len(ratings), 1) if ratings else None
         )
 
+    # Results are already newest first, and sort() is stable, so ties keep that order.
+    if sort == SORT_TITLE:
+        results.sort(key=lambda a: a.get("title", "").lower())
+    elif sort == SORT_ARTIST:
+        results.sort(key=lambda a: a.get("artist", "").lower())
+    elif sort == SORT_RATING:
+        # Highest first, unrated albums last.
+        results.sort(
+            key=lambda a: -a["average_rating"]
+            if a["average_rating"] is not None
+            else 1
+        )
+
     return render_template(
         "search.html",
         query=query,
         status=status,
+        sort=sort,
         results=results,
     )
 

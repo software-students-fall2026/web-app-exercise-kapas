@@ -36,11 +36,16 @@
 
 .search-filter {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     margin-top: 12px;
     font-size: 14px;
     color: #555;
+}
+
+.search-filter label[for="sort"] {
+    margin-left: 8px;
 }
 
 .search-filter select {
