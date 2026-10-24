@@ -11,12 +11,16 @@ load_dotenv()
 
 from profiles import profiles_bp
 from albums import albums_bp
+from covers import MAX_COVER_BYTES, covers_bp
 
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
 if not secret_key:
     raise RuntimeError('SECRET_KEY is not set. Add it to your .env file (see env.example).')
 app.config['SECRET_KEY'] = secret_key
+# Reject oversized request bodies before they are read into memory; slightly
+# above the cover limit so the friendly per-file error still fires first.
+app.config['MAX_CONTENT_LENGTH'] = MAX_COVER_BYTES + 512 * 1024
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
@@ -42,6 +46,7 @@ except Exception as e: # could not create indexes
 app.register_blueprint(auth_bp)
 app.register_blueprint(profiles_bp)
 app.register_blueprint(albums_bp)
+app.register_blueprint(covers_bp)
 
 
 @app.route("/")

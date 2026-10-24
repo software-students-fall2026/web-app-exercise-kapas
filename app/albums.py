@@ -18,6 +18,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
+from covers import CoverError, delete_cover, store_cover
 from db import get_db
 
 STATUS_LISTENED = "listened"
@@ -160,11 +161,19 @@ def add_album():
     if status == STATUS_WANT_TO_LISTEN:
         rating = None
 
+    # Stored last so a rejected form never leaves an orphaned image behind.
+    try:
+        cover_id = store_cover(request.files.get("cover"))
+    except CoverError as error:
+        flash(str(error), "error")
+        return render_template("add_album.html")
+
     result = get_db().albums.insert_one(
         {
             "title": title,
             "artist": artist,
             "year": year,
+            "cover_id": cover_id,
             "status": status,
             "rating": rating,
             "review": review or None,
@@ -215,17 +224,19 @@ def edit_album(album_id: str):
             flash("Year must be a number from 1900 to 9999", "error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
 
+    try:
+        new_cover_id = store_cover(request.files.get("cover"))
+    except CoverError as error:
+        flash(str(error), "error")
+        return redirect(url_for("albums.edit_album", album_id=album_id))
+
     # Update album
-    get_db().albums.update_one(
-        {"_id": ObjectId(album_id)},
-        {
-            "$set": {
-                "title": title,
-                "artist": artist,
-                "year": year,
-            }
-        },
-    )
+    updates: dict[str, Any] = {"title": title, "artist": artist, "year": year}
+    if new_cover_id is not None:
+        updates["cover_id"] = new_cover_id
+    get_db().albums.update_one({"_id": ObjectId(album_id)}, {"$set": updates})
+    if new_cover_id is not None:
+        delete_cover(album.get("cover_id"))
 
     flash("Album details updated successfully!", "success")
     return redirect(url_for("albums.view_album", album_id=album_id))
@@ -247,6 +258,7 @@ def delete_album(album_id: str):
     get_db().albums.delete_one(
         {"_id": ObjectId(album_id)}
     )
+    delete_cover(album.get("cover_id"))
 
     flash("Album deleted successfully!", "success")
 
