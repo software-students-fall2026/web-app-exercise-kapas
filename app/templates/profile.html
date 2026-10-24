@@ -53,9 +53,17 @@
 {% block content %}
 
 <section class="profile-header">
+    {% if profile.profile_picture_id %}
+    <img
+        class="profile-avatar profile-avatar-image"
+        src="{{ url_for('covers.get_profile_picture', picture_id=profile.profile_picture_id) }}"
+        alt="{{ profile.username }}'s profile picture"
+    >
+    {% else %}
     <div class="profile-avatar">
         {{ profile.username[0] | upper }}
     </div>
+    {% endif %}
 
     <div>
         <h1>{{ profile.username }}</h1>
@@ -64,6 +72,9 @@
 
     {% if is_owner %}
     <div class="profile-actions">
+        <a href="{{ url_for('profiles.edit_profile') }}" class="edit-profile-link">
+            Edit Profile
+        </a>
         <a href="{{ url_for('albums.add_album') }}" class="add-album-link">
             + Add Album
         </a>

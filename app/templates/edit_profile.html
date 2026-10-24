@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Album Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="edit-profile-container">
+    <h1>Edit Profile</h1>
+    <p class="edit-profile-subtitle">Update your username or profile picture.</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="edit-profile-picture">
+            {% if profile_picture_id %}
+            <img
+                class="profile-avatar profile-avatar-image"
+                src="{{ url_for('covers.get_profile_picture', picture_id=profile_picture_id) }}"
+                alt="Current profile picture"
+            >
+            {% else %}
+            <div class="profile-avatar">{{ username[0] | upper }}</div>
+            {% endif %}
+        </div>
+
+        <div class="edit-profile-field">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" value="{{ username }}" required>
+        </div>
+
+        <div class="edit-profile-field">
+            <label for="profile_picture">Profile picture</label>
+            <input
+                type="file"
+                id="profile_picture"
+                name="profile_picture"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+            >
+        </div>
+
+        {% if profile_picture_id %}
+        <label class="remove-profile-picture">
+            <input type="checkbox" name="remove_profile_picture" value="yes">
+            Remove current profile picture
+        </label>
+        {% endif %}
+
+        <div class="edit-profile-actions">
+            <button type="submit" class="add-album-button">Save Changes</button>
+            <a
+                class="edit-profile-cancel"
+                href="{{ url_for('profiles.view_profile', username=current_user.username) }}"
+            >
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}
