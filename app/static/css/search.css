@@ -67,6 +67,27 @@
     text-decoration: underline;
 }
 
+.album-ratings {
+    margin-top: 10px;
+}
+
+.album-ratings summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.album-entry {
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    color: #666;
+}
+
+.album-entry .review {
+    margin: 5px 0 0;
+}
+
 .empty {
     color: #666;
 }

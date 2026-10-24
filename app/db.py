@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 
 @lru_cache(maxsize=1)
@@ -24,6 +25,7 @@ def get_db():
     if not dbname:
         raise RuntimeError("MONGO_DBNAME is not set. Add it to your .env file (see env.example).")
     return _get_client()[dbname]
+
 
 def ensure_indexes():
     """
