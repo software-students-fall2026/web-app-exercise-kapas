@@ -178,3 +178,28 @@
   border-color: #b7dfb9;
   color: #1e5a22;
 }
+
+/* Space between album actions and the status badge */
+.album-actions {
+  margin-top: 16px;
+}
+
+/* Collapsible rating and review editor */
+.album-edit-form summary {
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.album-edit-form summary:focus-visible {
+  outline: 2px solid #333;
+  outline-offset: 5px;
+}
+
+.album-edit-form[open] summary {
+  margin-bottom: 24px;
+}
+
+.album-edit-form form {
+  margin: 0;
+}
