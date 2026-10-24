@@ -19,6 +19,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
+from covers import CoverError, delete_cover, store_cover
 from db import get_db
 
 STATUS_LISTENED = "listened"
@@ -165,7 +166,7 @@ def format_created_date(created_at: datetime) -> str:
     now = datetime.now(timezone.utc)
     diff = now - created_at
 
-    if diff.days == 0:
+    if diff.days <= 0:
         return "Today"
     elif diff.days == 1:
         return "Yesterday"
@@ -265,11 +266,19 @@ def add_album():
     if status == STATUS_WANT_TO_LISTEN:
         rating = None
 
+    # Stored last so a rejected form never leaves an orphaned image behind.
+    try:
+        cover_id = store_cover(request.files.get("cover"))
+    except CoverError as error:
+        flash(str(error), "error")
+        return render_template("add_album.html")
+
     result = get_db().albums.insert_one(
         {
             "title": title,
             "artist": artist,
             "year": year,
+            "cover_id": cover_id,
             "status": status,
             "rating": rating,
             "review": review or None,
@@ -303,7 +312,7 @@ def edit_album(album_id: str):
     year_str = request.form.get("year", "").strip()
 
     if not title or not artist:
-        flash("Title and artist are required", "album-error")
+        flash("Title and artist are required", "error")
         return redirect(url_for("albums.edit_album", album_id=album_id))
 
     year = None
@@ -311,12 +320,18 @@ def edit_album(album_id: str):
         try:
             year = int(year_str)
         except ValueError:
-            flash("Year must be a number from 1900 to 9999", "album-error")
+            flash("Year must be a number from 1900 to 9999", "error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
 
         if not 1900 <= year <= 9999:
-            flash("Year must be a number from 1900 to 9999", "album-error")
+            flash("Year must be a number from 1900 to 9999", "error")
             return redirect(url_for("albums.edit_album", album_id=album_id))
+
+    try:
+        new_cover_id = store_cover(request.files.get("cover"))
+    except CoverError as error:
+        flash(str(error), "error")
+        return redirect(url_for("albums.edit_album", album_id=album_id))
 
     get_db().albums.update_one(
         {"_id": ObjectId(album_id)},
@@ -329,7 +344,7 @@ def edit_album(album_id: str):
         },
     )
 
-    flash("Album details updated successfully!", "album-success")
+    flash("Album details updated successfully!", "success")
     return redirect(url_for("albums.view_album", album_id=album_id))
 
 
@@ -350,6 +365,7 @@ def delete_album(album_id: str):
     get_db().albums.delete_one(
         {"_id": ObjectId(album_id)}
     )
+    delete_cover(album.get("cover_id"))
 
     flash("Album deleted successfully!", "success")
 
@@ -374,13 +390,13 @@ def view_album(album_id: str):
 
         if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
             flash("Invalid status", "review-error")
-            return redirect(url_for("albums.view_album", album_id=album_id))
+            return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
         try:
             rating = parse_rating(rating_str)
         except ValueError:
             flash("Rating must be a number from 1 to 5 in steps of 0.5", "review-error")
-            return redirect(url_for("albums.view_album", album_id=album_id))
+            return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
         if status == STATUS_WANT_TO_LISTEN:
             rating = None
@@ -397,7 +413,7 @@ def view_album(album_id: str):
         )
 
         flash("Review updated successfully!", "review-success")
-        return redirect(url_for("albums.view_album", album_id=album_id))
+        return redirect(url_for("albums.view_album", album_id=album_id, _anchor="review-form"))
 
     owner = get_db().users.find_one({"_id": album["user_id"]})
     if owner is None:

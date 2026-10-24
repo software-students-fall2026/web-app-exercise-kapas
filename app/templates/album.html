@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_cover.html" import cover %}
 
 {% block title %}
 {{ album.title }} by {{ album.artist }} - Album Tracker
@@ -9,10 +10,20 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
 {% endblock %}
 
+{# Review messages render next to the review form instead of at the top #}
+{% block flashes %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages if not category.startswith('review-') %}
+    <div class="flash {{ category }}" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+{% endblock %}
+
 {% block content %}
 
 <!-- Album Header Section -->
 <div class="album-header">
+  {{ cover(album, "large") }}
   <h1>{{ album.title }}</h1>
   <p class="album-artist">by {{ album.artist }}</p>
   {% if album.year %}
@@ -35,18 +46,6 @@
   </a>
 </div>
 {% endif %}
-
-<!-- Flash Messages (Album Details) -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      {% if category.startswith('album-') %}
-        {% set base_category = category.replace('album-', '') %}
-        <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-{% endwith %}
 
 <!-- Status Badge -->
 <div class="album-status">
@@ -74,18 +73,13 @@
 
 <!-- Edit Form (owner only) -->
 {% if is_owner %}
-<div class="album-edit-form">
+<div class="album-edit-form" id="review-form">
   <h2>{% if album.rating or album.review %}Edit{% else %}Add{% endif %} Rating & Review</h2>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        {% if category.startswith('review-') %}
-          {% set base_category = category.replace('review-', '') %}
-          <div class="flash {{ base_category }}" role="alert">{{ message }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    {% for category, message in messages if category.startswith('review-') %}
+      <div class="flash {{ category.replace('review-', '') }}" role="alert">{{ message }}</div>
+    {% endfor %}
   {% endwith %}
 
   <form method="POST">
