@@ -84,6 +84,13 @@
 }
 
 
+.album-list .album-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
 .profile-info {
     flex: 1;
     min-width: 0;
