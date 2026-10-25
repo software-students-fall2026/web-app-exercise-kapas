@@ -1,5 +1,7 @@
+/* main is never wider than 480px, so the header always wraps its buttons onto their own row. */
 .profile-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 16px;
     background: white;
@@ -29,6 +31,7 @@
 .profile-header h1 {
     font-size: 24px;
     margin: 0 0 4px;
+    overflow-wrap: anywhere;
 }
 
 .profile-subtitle {
@@ -90,8 +93,9 @@
 }
 
 .profile-actions {
-    margin-left: auto;
+    width: 100%;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
 }
@@ -212,14 +216,5 @@
     .edit-profile-container {
         margin: 16px auto;
         padding: 24px 16px;
-    }
-
-    .profile-header {
-        flex-wrap: wrap;
-    }
-
-    .profile-actions {
-        width: 100%;
-        margin-left: 0;
     }
 }
