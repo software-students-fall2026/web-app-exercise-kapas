@@ -67,10 +67,27 @@ def sort_albums(albums: list[dict[str, Any]], sort: str) -> None:
 
 def get_profile_data(user: dict[str, Any], sort: str = SORT_RATING) -> dict[str, Any]:
     """Build the profile dict the template needs for user.
+
+    Each album carries this user's own status, rating and review.
     """
-    albums = list(
-        get_db().albums.find({"user_id": user["_id"]}).sort("created_at", -1)
-    )
+    db = get_db()
+    reviews = list(db.reviews.find({"user_id": user["_id"]}).sort("created_at", -1))
+    albums_by_id = {
+        album["_id"]: album
+        for album in db.albums.find(
+            {"_id": {"$in": [review["album_id"] for review in reviews]}}
+        )
+    }
+    albums = [
+        {
+            **albums_by_id[review["album_id"]],
+            "status": review.get("status"),
+            "rating": review.get("rating"),
+            "review": review.get("review"),
+        }
+        for review in reviews
+        if review["album_id"] in albums_by_id
+    ]
     listened = [a for a in albums if a.get("status") == STATUS_LISTENED]
     want_to_listen = [
         a for a in albums if a.get("status") == STATUS_WANT_TO_LISTEN

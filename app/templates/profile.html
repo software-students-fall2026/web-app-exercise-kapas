@@ -34,12 +34,12 @@
 
             {% if is_owner %}
             <div class="album-actions">
-                <a href="{{ url_for('albums.edit_album', album_id=album._id) }}">
-                    Edit
+                <a href="{{ url_for('albums.view_album', album_id=album._id, _anchor='review-form') }}">
+                    Edit review
                 </a>
 
-                <a href="{{ url_for('albums.delete_album', album_id=album._id) }}">
-                    Delete
+                <a href="{{ url_for('albums.delete_review', album_id=album._id) }}">
+                    Remove
                 </a>
             </div>
             {% endif %}

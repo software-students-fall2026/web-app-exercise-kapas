@@ -29,8 +29,10 @@ def get_db():
 
 def ensure_indexes():
     """
-    ensures usernames/emails are unique
+    ensures usernames/emails are unique and each user reviews an album at most once
     """
     db = get_db()
     db.users.create_index("username", unique=True)
     db.users.create_index("email", unique=True)
+    db.reviews.create_index([("album_id", 1), ("user_id", 1)], unique=True)
+    db.reviews.create_index("user_id")

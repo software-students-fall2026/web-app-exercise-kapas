@@ -30,51 +30,67 @@
   <p class="album-year">{{ album.year }}</p>
   {% endif %}
   <p class="album-meta">
+    {% if owner %}
     Added by <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">{{ owner.username }}</a>
-    &middot; {{ created_date }}
+    &middot;
+    {% endif %}
+    {{ created_date }}
   </p>
-  {% if is_owner %}
+  {% if reviews %}
+  <p class="album-meta">
+    {{ reviews | length }} {{ "person has" if reviews | length == 1 else "people have" }} this album
+    {% if average_rating is not none %}
+    &middot; {{ average_rating }}/5 average
+    {% endif %}
+  </p>
+  {% endif %}
+</div>
+
+{% if is_owner %}
 <div class="album-actions">
   <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
      class="album-secondary-link">
     Edit Album Details
   </a>
 
+  {% if can_delete %}
   <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
      class="album-secondary-link">
     Delete Album
   </a>
-</div>
-{% endif %}
-
-<!-- Status Badge -->
-<div class="album-status">
-  {% if album.status == 'listened' %}
-  <span class="status-badge listened">Listened</span>
-  {% else %}
-  <span class="status-badge want-to-listen">Want to Listen</span>
   {% endif %}
 </div>
-
-<!-- Rating Display (if exists and status is listened) -->
-{% if album.status == 'listened' and album.rating %}
-<div class="album-rating">
-  <strong>Rating:</strong> {{ album.rating }}/5
-</div>
 {% endif %}
 
-<!-- Review Display (if exists) -->
-{% if album.review %}
-<div class="album-review">
-  <h2>Review</h2>
-  <p>{{ album.review }}</p>
-</div>
-{% endif %}
+<!-- Everyone's reviews -->
+<section class="album-reviews">
+  <h2>Reviews</h2>
+  {% for review in reviews %}
+  <div class="album-review">
+    <p class="album-review-header">
+      <a href="{{ url_for('profiles.view_profile', username=review.username) }}">{{ review.username }}</a>
+      {% if review.status == 'listened' %}
+      <span class="status-badge listened">Listened</span>
+      {% else %}
+      <span class="status-badge want-to-listen">Want to Listen</span>
+      {% endif %}
+      {% if review.status == 'listened' and review.rating %}
+      <span class="album-review-rating">{{ review.rating }}/5</span>
+      {% endif %}
+    </p>
+    {% if review.review %}
+    <p class="album-review-text">{{ review.review }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="empty">Nobody has reviewed this album yet.</p>
+  {% endfor %}
+</section>
 
-<!-- Edit Form (owner only) -->
-{% if is_owner %}
+<!-- The logged-in user's own review -->
+{% if current_user.is_authenticated %}
 <div class="album-edit-form" id="review-form">
-  <h2>{% if album.rating or album.review %}Edit{% else %}Add{% endif %} Rating & Review</h2>
+  <h2>{% if my_review %}Edit Your Rating & Review{% else %}Add to Your Albums{% endif %}</h2>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages if category.startswith('review-') %}
@@ -88,10 +104,10 @@
     <div class="form-group">
       <label for="status">Status</label>
       <select id="status" name="status" required>
-        <option value="want_to_listen" {% if album.status == 'want_to_listen' %}selected{% endif %}>
+        <option value="want_to_listen" {% if my_review and my_review.status == 'want_to_listen' %}selected{% endif %}>
           Want to Listen
         </option>
-        <option value="listened" {% if album.status == 'listened' %}selected{% endif %}>
+        <option value="listened" {% if not my_review or my_review.status == 'listened' %}selected{% endif %}>
           Listened
         </option>
       </select>
@@ -106,7 +122,7 @@
         min="1"
         max="5"
         step="0.5"
-        value="{{ album.rating if album.rating else '' }}"
+        value="{{ my_review.rating if my_review and my_review.rating else '' }}"
         placeholder="Optional"
       >
     </div>
@@ -118,12 +134,25 @@
         name="review"
         rows="6"
         placeholder="Share your thoughts about this album..."
-      >{{ album.review if album.review else '' }}</textarea>
+      >{{ my_review.review if my_review and my_review.review else '' }}</textarea>
     </div>
 
-    <button type="submit" class="submit-button">Save Changes</button>
+    <button type="submit" class="submit-button">
+      {% if my_review %}Save Changes{% else %}Add Album{% endif %}
+    </button>
   </form>
+
+  {% if my_review %}
+  <a href="{{ url_for('albums.delete_review', album_id=album._id) }}"
+     class="album-secondary-link">
+    Remove My Review
+  </a>
+  {% endif %}
 </div>
+{% else %}
+<p class="album-login-prompt">
+  <a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> to add your own rating and review.
+</p>
 {% endif %}
 
 {% endblock %}
