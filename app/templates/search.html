@@ -116,6 +116,7 @@ Search - Album Tracker
                 {% endif %}
             </div>
 
+            {% if album.entries %}
             <details class="album-ratings">
                 <summary>View ratings and status</summary>
 
@@ -137,6 +138,7 @@ Search - Album Tracker
                 </div>
                 {% endfor %}
             </details>
+            {% endif %}
         </div>
     </li>
     {% endfor %}
