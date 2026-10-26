@@ -38,7 +38,9 @@ def search_albums():
     """Search albums by title or artist, optionally filtering by status and sorting."""
     query = request.args.get("q", "").strip()
     status = request.args.get("status", "").strip()
-    if status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
+    # The status filter means "albums I marked as ...", so it needs a logged-in user.
+    user_id = current_user._id if current_user.is_authenticated else None
+    if user_id is None or status not in [STATUS_LISTENED, STATUS_WANT_TO_LISTEN]:
         status = ""
     sort = request.args.get("sort", "").strip()
     if sort not in [SORT_TITLE, SORT_ARTIST, SORT_RATING]:
@@ -53,7 +55,9 @@ def search_albums():
             {"artist": {"$regex": escaped_query, "$options": "i"}},
         ]
     if status:
-        album_filter["_id"] = {"$in": db.reviews.distinct("album_id", {"status": status})}
+        album_filter["_id"] = {
+            "$in": db.reviews.distinct("album_id", {"user_id": user_id, "status": status})
+        }
 
     results = list(db.albums.find(album_filter).sort("created_at", -1).limit(50))
     reviews_by_album = get_reviews_for_albums([album["_id"] for album in results])

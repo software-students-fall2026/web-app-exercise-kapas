@@ -29,12 +29,14 @@ Search - Album Tracker
     </div>
 
     <div class="search-filter">
-        <label for="status">Status</label>
+        {% if current_user.is_authenticated %}
+        <label for="status">My status</label>
         <select id="status" name="status">
             <option value="" {% if not status %}selected{% endif %}>All</option>
             <option value="listened" {% if status == 'listened' %}selected{% endif %}>Listened</option>
             <option value="want_to_listen" {% if status == 'want_to_listen' %}selected{% endif %}>Want to listen</option>
         </select>
+        {% endif %}
 
         <label for="sort">Sort by</label>
         <select id="sort" name="sort">
