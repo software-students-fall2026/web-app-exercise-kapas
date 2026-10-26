@@ -80,7 +80,8 @@ def register():
 
     login_user(user)
     flash('Account created!', 'success')
-    return redirect(url_for('home'))
+    next_page = request.args.get('next')
+    return redirect(next_page if next_page else url_for('home'))
 
 @auth_bp.route('/api/auth/me', methods=['GET'])
 @login_required
