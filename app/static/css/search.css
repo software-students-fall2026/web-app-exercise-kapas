@@ -72,6 +72,37 @@
     text-decoration: underline;
 }
 
+.album-quick-add {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+.album-quick-add form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.album-quick-add button {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #111;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.album-quick-add button:hover {
+    background: #f3f3f3;
+}
+
+.album-quick-add a {
+    color: #111;
+    font-weight: 600;
+}
+
 .album-ratings {
     margin-top: 10px;
 }

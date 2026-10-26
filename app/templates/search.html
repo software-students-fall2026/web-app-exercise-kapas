@@ -96,6 +96,26 @@ Search - Album Tracker
                 {% endif %}
             </p>
 
+            <div class="album-quick-add">
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login', next=request.full_path) }}">Log in to add</a>
+                {% elif album.my_review %}
+                In your list:
+                {{ "Listened" if album.my_review.status == "listened" else "Want to listen" }}
+                {% if album.my_review.status == "listened" and album.my_review.rating %}
+                &middot; {{ album.my_review.rating }}/5
+                {% endif %}
+                &middot;
+                <a href="{{ url_for('albums.view_album', album_id=album._id, _anchor='review-form') }}">Edit</a>
+                {% else %}
+                <form method="POST" action="{{ url_for('albums.view_album', album_id=album._id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" name="status" value="want_to_listen">+ Want to listen</button>
+                    <button type="submit" name="status" value="listened">+ Listened</button>
+                </form>
+                {% endif %}
+            </div>
+
             <details class="album-ratings">
                 <summary>View ratings and status</summary>
 

@@ -62,10 +62,15 @@ def search_albums():
     results = list(db.albums.find(album_filter).sort("created_at", -1).limit(50))
     reviews_by_album = get_reviews_for_albums([album["_id"] for album in results])
     creators = get_usernames([album["user_id"] for album in results])
+    current_uid = _current_user_id()
 
     for album in results:
         album["owner_username"] = creators.get(album["user_id"])
         album["entries"] = reviews_by_album.get(album["_id"], [])
+        # The logged-in user's own review, so results can show it or offer quick-add.
+        album["my_review"] = next(
+            (e for e in album["entries"] if str(e["user_id"]) == current_uid), None
+        )
         album["user_count"] = len(album["entries"])
         album["average_rating"] = average_rating(album["entries"])
 
