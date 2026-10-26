@@ -1,4 +1,4 @@
-"""Album cover images - stored in GridFS and served by id."""
+"""Album covers and profile pictures stored in GridFS and served by id."""
 
 from typing import Optional
 
@@ -18,6 +18,10 @@ covers_bp = Blueprint("covers", __name__)
 
 class CoverError(ValueError):
     """Raised with a user-facing message when an uploaded cover is unusable."""
+
+
+class ProfilePictureError(ValueError):
+    """Raised with a user-facing message when an uploaded profile picture is unusable."""
 
 
 def _detect_image_type(data: bytes) -> Optional[str]:
@@ -41,6 +45,30 @@ def _bucket() -> gridfs.GridFS:
     return gridfs.GridFS(get_db(), collection="covers")
 
 
+def _profile_picture_bucket() -> gridfs.GridFS:
+    return gridfs.GridFS(get_db(), collection="profile_pictures")
+
+
+def _store_image(
+    upload: Optional[FileStorage],
+    bucket: gridfs.GridFS,
+    label: str,
+    error_type: type[ValueError],
+) -> Optional[ObjectId]:
+    """Validate an uploaded image by its bytes and store it in the given bucket."""
+    if upload is None or not upload.filename:
+        return None
+
+    data = upload.stream.read(MAX_COVER_BYTES + 1)
+    if len(data) > MAX_COVER_BYTES:
+        raise error_type(f"{label} image must be 2 MB or smaller")
+    content_type = _detect_image_type(data)
+    if content_type is None:
+        raise error_type(f"{label} must be a PNG, JPEG, GIF, or WebP image")
+
+    return bucket.put(data, content_type=content_type)
+
+
 def store_cover(upload: Optional[FileStorage]) -> Optional[ObjectId]:
     """Validate and store an uploaded cover, returning its id.
 
@@ -49,23 +77,28 @@ def store_cover(upload: Optional[FileStorage]) -> Optional[ObjectId]:
     """
     if upload is None or not upload.filename:
         return None
+    return _store_image(upload, _bucket(), "Cover", CoverError)
 
-    data = upload.stream.read(MAX_COVER_BYTES + 1)
-    if len(data) > MAX_COVER_BYTES:
-        raise CoverError(
-            f"Cover image must be {MAX_COVER_BYTES // (1024 * 1024)} MB or smaller"
-        )
-    content_type = _detect_image_type(data)
-    if content_type is None:
-        raise CoverError("Cover must be a PNG, JPEG, GIF, or WebP image")
 
-    return _bucket().put(data, content_type=content_type)
+def store_profile_picture(upload: Optional[FileStorage]) -> Optional[ObjectId]:
+    """Validate and store a profile picture, returning its GridFS id."""
+    if upload is None or not upload.filename:
+        return None
+    return _store_image(
+        upload, _profile_picture_bucket(), "Profile picture", ProfilePictureError
+    )
 
 
 def delete_cover(cover_id: Optional[ObjectId]) -> None:
     """Remove a stored cover. Safe to call with None or an id that is gone."""
     if cover_id is not None:
         _bucket().delete(cover_id)
+
+
+def delete_profile_picture(picture_id: Optional[ObjectId]) -> None:
+    """Remove a stored profile picture. Safe to call with None or a missing id."""
+    if picture_id is not None:
+        _profile_picture_bucket().delete(picture_id)
 
 
 @covers_bp.get("/covers/<cover_id>")
@@ -78,6 +111,20 @@ def get_cover(cover_id: str) -> Response:
 
     response = Response(stored.read(), mimetype=stored.content_type)
     # A cover's bytes never change for a given id, so it can be cached for good.
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@covers_bp.get("/profile-pictures/<picture_id>")
+def get_profile_picture(picture_id: str) -> Response:
+    """Serve a saved profile picture."""
+    try:
+        stored = _profile_picture_bucket().get(ObjectId(picture_id))
+    except (InvalidId, NoFile):
+        abort(404)
+
+    response = Response(stored.read(), mimetype=stored.content_type)
     response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response

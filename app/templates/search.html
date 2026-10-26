@@ -9,7 +9,6 @@ Search - Album Tracker
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 {% endblock %}
 
-{# Expects: query (str), status (str: "", "listened" or "want_to_listen"), results (list of album dicts, each with owner_username) #}
 {% block content %}
 {% set has_search = query or status %}
 
@@ -30,11 +29,21 @@ Search - Album Tracker
     </div>
 
     <div class="search-filter">
-        <label for="status">Status</label>
+        {% if current_user.is_authenticated %}
+        <label for="status">My status</label>
         <select id="status" name="status">
             <option value="" {% if not status %}selected{% endif %}>All</option>
             <option value="listened" {% if status == 'listened' %}selected{% endif %}>Listened</option>
             <option value="want_to_listen" {% if status == 'want_to_listen' %}selected{% endif %}>Want to listen</option>
+        </select>
+        {% endif %}
+
+        <label for="sort">Sort by</label>
+        <select id="sort" name="sort">
+            <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recently added</option>
+            <option value="title" {% if sort == 'title' %}selected{% endif %}>Album name</option>
+            <option value="artist" {% if sort == 'artist' %}selected{% endif %}>Artist name</option>
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Average rating</option>
         </select>
     </div>
 </form>
@@ -60,20 +69,74 @@ Search - Album Tracker
     {% for album in results %}
     <li class="album">
         {{ cover(album) }}
+
         <div class="album-info">
             <a href="{{ url_for('albums.view_album', album_id=album._id) }}">
                 <strong>{{ album.title }}</strong>
             </a> by {{ album.artist }}
+
             {% if album.year %}({{ album.year }}){% endif %}
+
             <p class="search-meta">
+                {% if album.owner_username %}
                 Added by
-                <a href="{{ url_for('profiles.view_profile', username=album.owner_username) }}">{{ album.owner_username }}</a>
-                &middot;
-                {{ "Listened" if album.status == "listened" else "Want to listen" }}
-                {% if album.status == "listened" and album.rating %}
-                &middot; <span class="rating">{{ album.rating }}/5</span>
+                <a href="{{ url_for('profiles.view_profile', username=album.owner_username) }}">
+                    {{ album.owner_username }}
+                </a>
+
+                {% if album.user_count > 1 %}
+                + {{ album.user_count - 1 }} other{{ "" if album.user_count == 2 else "s" }}
+                {% endif %}
+                {% else %}
+                {{ album.user_count }} {{ "person has" if album.user_count == 1 else "people have" }} this album
+                {% endif %}
+
+                {% if album.average_rating is not none %}
+                &middot; {{ album.average_rating }}/5 average
                 {% endif %}
             </p>
+
+            <div class="album-quick-add">
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login', next=request.full_path) }}">Log in to add</a>
+                {% elif album.my_review %}
+                In your list:
+                {{ "Listened" if album.my_review.status == "listened" else "Want to listen" }}
+                {% if album.my_review.status == "listened" and album.my_review.rating %}
+                &middot; {{ album.my_review.rating }}/5
+                {% endif %}
+                &middot;
+                <a href="{{ url_for('albums.view_album', album_id=album._id, _anchor='review-form') }}">Edit</a>
+                {% else %}
+                <form method="POST" action="{{ url_for('albums.view_album', album_id=album._id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" name="status" value="want_to_listen">+ Want to listen</button>
+                    <button type="submit" name="status" value="listened">+ Listened</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <details class="album-ratings">
+                <summary>View ratings and status</summary>
+
+                {% for entry in album.entries %}
+                <div class="album-entry">
+                    <a href="{{ url_for('profiles.view_profile', username=entry.username) }}">
+                        {{ entry.username }}
+                    </a>
+                    &middot;
+                    {{ "Listened" if entry.status == "listened" else "Want to listen" }}
+
+                    {% if entry.status == "listened" and entry.rating %}
+                    &middot; <span class="rating">{{ entry.rating }}/5</span>
+                    {% endif %}
+
+                    {% if entry.review %}
+                    <p class="review">{{ entry.review }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </details>
         </div>
     </li>
     {% endfor %}

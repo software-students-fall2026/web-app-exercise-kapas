@@ -32,8 +32,14 @@
                 Search
             </a>
 
+            {# Only your own profile counts as "this page", not other people's #}
+            {% set on_own_profile = current_user.is_authenticated and (
+                request.endpoint in ['profiles.my_profile', 'profiles.edit_profile']
+                or (request.endpoint == 'profiles.view_profile'
+                    and request.view_args.username == current_user.username)
+            ) %}
             <a href="{{ url_for('profiles.my_profile') }}"
-            {% if request.blueprint == 'profiles' %}aria-current="page"{% endif %}>
+            {% if on_own_profile %}aria-current="page"{% endif %}>
                 Profile
             </a>
             

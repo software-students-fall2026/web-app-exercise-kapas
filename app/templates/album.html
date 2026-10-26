@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
 {% endblock %}
 
+{# Review messages render next to the review form instead of at the top #}
 {% block flashes %}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages if not category.startswith('review-') %}
@@ -31,115 +32,146 @@
   {% endif %}
 
   <p class="album-meta">
-    Added by
-    <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">
-      {{ owner.username }}
-    </a>
-    &middot; {{ created_date }}
+    {% if owner %}
+    Added by <a href="{{ url_for('profiles.view_profile', username=owner.username) }}">{{ owner.username }}</a>
+    &middot;
+    {% endif %}
+    {{ created_date }}
   </p>
-
-  {% if is_owner %}
-    <div class="album-actions">
-      <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
-         class="album-secondary-link">
-        Edit Album Details
-      </a>
-
-      <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
-         class="album-secondary-link">
-        Delete Album
-      </a>
-    </div>
+  {% if reviews %}
+  <p class="album-meta">
+    {{ reviews | length }} {{ "person has" if reviews | length == 1 else "people have" }} this album
+    {% if average_rating is not none %}
+    &middot; {{ average_rating }}/5 average
+    {% endif %}
+  </p>
   {% endif %}
 </div>
-
-<div class="album-status">
-  {% if album.status == 'listened' %}
-    <span class="status-badge listened">Listened</span>
-  {% else %}
-    <span class="status-badge want-to-listen">Want to Listen</span>
-  {% endif %}
-</div>
-
-{% if album.status == 'listened' and album.rating %}
-  <div class="album-rating">
-    <strong>Rating:</strong> {{ album.rating }}/5
-  </div>
-{% endif %}
-
-{% if album.review %}
-  <div class="album-review">
-    <h2>{% if is_owner %}Your Review{% else %}Review{% endif %}</h2>
-    <p>{{ album.review }}</p>
-  </div>
-{% endif %}
 
 {% if is_owner %}
-  <section id="review-form">
+<div class="album-actions">
+  <a href="{{ url_for('albums.edit_album', album_id=album._id) }}"
+     class="album-secondary-link">
+    Edit Album Details
+  </a>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages if category.startswith('review-') %}
-        <div class="flash {{ category.replace('review-', '') }}" role="alert">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endwith %}
+  {% if can_delete %}
+  <a href="{{ url_for('albums.delete_album', album_id=album._id) }}"
+     class="album-secondary-link">
+    Delete Album
+  </a>
+  {% endif %}
+</div>
+{% endif %}
 
-    <details class="album-edit-form"
-             {% if get_flashed_messages(category_filter=['review-error']) %}open{% endif %}>
-      <summary>
-        {% if album.rating or album.review %}
-          Edit Rating & Review
-        {% else %}
-          Add Rating & Review
-        {% endif %}
-      </summary>
+<!-- Everyone's reviews -->
+<section class="album-reviews">
+  <h2>Reviews</h2>
+  {% for review in reviews %}
+  <div class="album-review">
+    <p class="album-review-header">
+      <a href="{{ url_for('profiles.view_profile', username=review.username) }}">{{ review.username }}</a>
+      {% if review.status == 'listened' %}
+      <span class="status-badge listened">Listened</span>
+      {% else %}
+      <span class="status-badge want-to-listen">Want to Listen</span>
+      {% endif %}
+      {% if review.status == 'listened' and review.rating %}
+      <span class="album-review-rating">{{ review.rating }}/5</span>
+      {% endif %}
+    </p>
+    {% if review.review %}
+    <p class="album-review-text">{{ review.review }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="empty">Nobody has reviewed this album yet.</p>
+  {% endfor %}
+</section>
 
-      <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<!-- The logged-in user's own review, collapsed until they want to edit it -->
+{% if current_user.is_authenticated %}
+<section id="review-form">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages if category.startswith('review-') %}
+      <div class="flash {{ category.replace('review-', '') }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
 
-        <div class="form-group">
-          <label for="status">Status</label>
-          <select id="status" name="status" required>
-            <option value="want_to_listen"
-                    {% if album.status == 'want_to_listen' %}selected{% endif %}>
-              Want to Listen
-            </option>
-            <option value="listened"
-                    {% if album.status == 'listened' %}selected{% endif %}>
-              Listened
-            </option>
-          </select>
-        </div>
+  <details class="album-edit-form"
+           {% if get_flashed_messages(category_filter=['review-error']) %}open{% endif %}>
+    <summary>
+      {% if my_review %}Edit Your Rating & Review{% else %}Add to Your Albums{% endif %}
+    </summary>
 
-        <div class="form-group">
-          <label for="rating">Rating (1-5)</label>
-          <input
-            type="number"
-            id="rating"
-            name="rating"
-            min="1"
-            max="5"
-            step="0.5"
-            value="{{ album.rating if album.rating else '' }}"
-            placeholder="Optional"
-          >
-        </div>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="form-group">
-          <label for="review">Review</label>
-          <textarea
-            id="review"
-            name="review"
-            rows="6"
-            placeholder="Share your thoughts about this album..."
-          >{{ album.review if album.review else '' }}</textarea>
-        </div>
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" name="status" required>
+          <option value="want_to_listen" {% if my_review and my_review.status == 'want_to_listen' %}selected{% endif %}>
+            Want to Listen
+          </option>
+          <option value="listened" {% if not my_review or my_review.status == 'listened' %}selected{% endif %}>
+            Listened
+          </option>
+        </select>
+      </div>
 
-        <button type="submit" class="submit-button">Save Changes</button>
-      </form>
-    </details>
-  </section>
+      <div class="form-group">
+        <label for="rating">Rating (1-5)</label>
+        <input
+          type="number"
+          id="rating"
+          name="rating"
+          min="1"
+          max="5"
+          step="0.5"
+          value="{{ my_review.rating if my_review and my_review.rating else '' }}"
+          placeholder="Optional"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="review">Review</label>
+        <textarea
+          id="review"
+          name="review"
+          rows="6"
+          placeholder="Share your thoughts about this album..."
+        >{{ my_review.review if my_review and my_review.review else '' }}</textarea>
+      </div>
+
+      <button type="submit" class="submit-button">
+        {% if my_review %}Save Changes{% else %}Add Album{% endif %}
+      </button>
+    </form>
+
+    {% if my_review %}
+    <a href="{{ url_for('albums.delete_review', album_id=album._id) }}"
+       class="album-secondary-link">
+      Remove My Review
+    </a>
+    {% endif %}
+  </details>
+</section>
+
+{# Links like "Edit review" point at #review-form; open the editor for them,
+   but leave it closed right after a save so the confirmation stays in view. #}
+<script>
+  (function () {
+    var section = document.getElementById("review-form");
+    var editor = section && section.querySelector("details");
+    if (editor && location.hash === "#review-form" && !section.querySelector(".flash.success")) {
+      editor.open = true;
+    }
+  })();
+</script>
+{% else %}
+<p class="album-login-prompt">
+  <a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> to add your own rating and review.
+</p>
 {% endif %}
 
 {% endblock %}

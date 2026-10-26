@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Remove your review of {{ album.title }} - Album Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/album_actions.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="delete-panel">
+    <h1>Remove Your Review</h1>
+
+    <p>
+        Remove <strong>{{ album.title }}</strong>
+        by {{ album.artist }} from your albums, along with your rating and review?
+    </p>
+
+    <p class="delete-warning">
+        {% if is_last_review %}
+        Nobody else has this album, so the album itself will be deleted too.
+        {% endif %}
+        This action cannot be undone.
+    </p>
+
+    <form method="POST"
+          action="{{ url_for('albums.delete_review', album_id=album._id) }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <button type="submit" class="delete-button">
+            Remove Review
+        </button>
+    </form>
+
+    <a class="album-secondary-link"
+       href="{{ url_for('albums.view_album', album_id=album._id) }}">
+        Cancel
+    </a>
+</section>
+
+{% endblock %}

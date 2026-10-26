@@ -34,12 +34,12 @@
 
             {% if is_owner %}
             <div class="album-actions">
-                <a href="{{ url_for('albums.edit_album', album_id=album._id) }}">
-                    Edit
+                <a href="{{ url_for('albums.view_album', album_id=album._id, _anchor='review-form') }}">
+                    Edit review
                 </a>
 
-                <a href="{{ url_for('albums.delete_album', album_id=album._id) }}">
-                    Delete
+                <a href="{{ url_for('albums.delete_review', album_id=album._id) }}">
+                    Remove
                 </a>
             </div>
             {% endif %}
@@ -53,17 +53,28 @@
 {% block content %}
 
 <section class="profile-header">
+    {% if profile.profile_picture_id %}
+    <img
+        class="profile-avatar profile-avatar-image"
+        src="{{ url_for('covers.get_profile_picture', picture_id=profile.profile_picture_id) }}"
+        alt="{{ profile.username }}'s profile picture"
+    >
+    {% else %}
     <div class="profile-avatar">
         {{ profile.username[0] | upper }}
     </div>
+    {% endif %}
 
-    <div>
+    <div class="profile-info">
         <h1>{{ profile.username }}</h1>
         <p class="profile-subtitle">Album collection</p>
     </div>
 
     {% if is_owner %}
     <div class="profile-actions">
+        <a href="{{ url_for('profiles.edit_profile') }}" class="edit-profile-link">
+            Edit Profile
+        </a>
         <a href="{{ url_for('albums.add_album') }}" class="add-album-link">
             + Add Album
         </a>
@@ -90,6 +101,17 @@
     &middot; average rating {{ profile.average_rating }}/5
     {% endif %}
 </p>
+
+<form class="sort-form" method="GET" action="">
+    <label for="sort">Sort by</label>
+    <select id="sort" name="sort">
+        <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating</option>
+        <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recently added</option>
+        <option value="title" {% if sort == 'title' %}selected{% endif %}>Album name</option>
+        <option value="artist" {% if sort == 'artist' %}selected{% endif %}>Artist name</option>
+    </select>
+    <button type="submit">Sort</button>
+</form>
 
 
 <section class="profile-section">

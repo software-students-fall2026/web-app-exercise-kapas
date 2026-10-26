@@ -1,6 +1,6 @@
 /* Album Header */
 .album-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .album-header .album-cover {
@@ -40,6 +40,7 @@
 
 /* Status Badge */
 .album-status {
+  margin-top: 12px;
   margin-bottom: 24px;
 }
 
@@ -71,24 +72,68 @@
 }
 
 /* Review Display */
+.album-actions {
+  margin-bottom: 24px;
+}
+
+.album-reviews {
+  margin-bottom: 24px;
+}
+
+.album-reviews h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
 .album-review {
   padding: 16px;
   background: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
-.album-review h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 18px;
-}
-
-.album-review p {
+.album-review-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin: 0;
+}
+
+.album-review-header a {
+  color: #111;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.album-review-header a:hover {
+  text-decoration: underline;
+}
+
+.album-review-header .status-badge {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.album-review-rating {
+  color: #555;
+  font-size: 14px;
+}
+
+.album-review-text {
+  margin: 12px 0 0;
   line-height: 1.6;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.album-login-prompt {
+  color: #555;
+}
+
+.album-login-prompt a {
+  color: #111;
 }
 
 /* Edit Form */
@@ -177,11 +222,6 @@
   background: #e8f5e9;
   border-color: #b7dfb9;
   color: #1e5a22;
-}
-
-/* Space between album actions and the status badge */
-.album-actions {
-  margin-top: 16px;
 }
 
 /* Collapsible rating and review editor */

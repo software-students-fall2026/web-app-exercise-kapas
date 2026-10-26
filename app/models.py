@@ -7,11 +7,14 @@ class User(UserMixin):
     """
     User model for authentication
     """
-    def __init__(self, username, email, password_hash=None, _id=None):
+    def __init__(
+        self, username, email, password_hash=None, _id=None, profile_picture_id=None
+    ):
         self.username = username
         self.email = email
         self.password_hash = password_hash
         self._id = _id
+        self.profile_picture_id = profile_picture_id
 
     def get_id(self):
         """Required by flask-login"""
@@ -31,7 +34,8 @@ class User(UserMixin):
         user_data = {
             "username": self.username,
             "email": self.email,
-            "password_hash": self.password_hash
+            "password_hash": self.password_hash,
+            "profile_picture_id": self.profile_picture_id,
         }
         if self._id:
             db.users.update_one({"_id": ObjectId(self._id)}, {"$set": user_data})
@@ -50,7 +54,8 @@ class User(UserMixin):
                 username=user_data["username"],
                 email=user_data["email"],
                 password_hash=user_data["password_hash"],
-                _id=user_data["_id"]
+                _id=user_data["_id"],
+                profile_picture_id=user_data.get("profile_picture_id"),
             )
         return None
 
@@ -64,7 +69,8 @@ class User(UserMixin):
                 username=user_data["username"],
                 email=user_data["email"],
                 password_hash=user_data["password_hash"],
-                _id=user_data["_id"]
+                _id=user_data["_id"],
+                profile_picture_id=user_data.get("profile_picture_id"),
             )
         return None
 
@@ -78,6 +84,7 @@ class User(UserMixin):
                 username=user_data["username"],
                 email=user_data["email"],
                 password_hash=user_data["password_hash"],
-                _id=user_data["_id"]
+                _id=user_data["_id"],
+                profile_picture_id=user_data.get("profile_picture_id"),
             )
         return None

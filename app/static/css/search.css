@@ -36,11 +36,16 @@
 
 .search-filter {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     margin-top: 12px;
     font-size: 14px;
     color: #555;
+}
+
+.search-filter label[for="sort"] {
+    margin-left: 8px;
 }
 
 .search-filter select {
@@ -65,6 +70,58 @@
 .search-meta a {
     font-weight: normal;
     text-decoration: underline;
+}
+
+.album-quick-add {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+.album-quick-add form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.album-quick-add button {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #111;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.album-quick-add button:hover {
+    background: #f3f3f3;
+}
+
+.album-quick-add a {
+    color: #111;
+    font-weight: 600;
+}
+
+.album-ratings {
+    margin-top: 10px;
+}
+
+.album-ratings summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.album-entry {
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    color: #666;
+}
+
+.album-entry .review {
+    margin: 5px 0 0;
 }
 
 .empty {
