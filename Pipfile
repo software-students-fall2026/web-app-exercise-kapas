@@ -9,6 +9,7 @@ pymongo = "*"
 python-dotenv = "*"
 flask-login = "*"
 flask-wtf = "*"
+certifi = "*"
 
 [dev-packages]
 

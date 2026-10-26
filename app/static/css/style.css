@@ -249,3 +249,9 @@ main {
         padding: 22px;
     }
 }
+
+nav a[aria-current="page"] {
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
